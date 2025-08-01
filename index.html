@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureTag - QR & NFC Scanner</title>
+    <meta name="description" content="Advanced QR & NFC Scanner with secure backend verification">
+    <meta name="keywords" content="QR code, NFC, scanner, security, verification">
+    <meta name="author" content="SecureTag App">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .phone-container {
+            width: 375px;
+            height: 700px;
+            background: #ffffff;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            overflow: hidden;
+            position: relative;
+            border: 8px solid #1a1a1a;
+        }
+
+        .status-bar {
+            height: 30px;
+            background: #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .time {
+            color: white;
+        }
+
+        .battery-signal {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .signal-bar {
+            width: 3px;
+            height: 8px;
+            background: white;
+            border-radius: 1px;
+        }
+
+        .battery {
+            width: 20px;
+            height: 10px;
+            border: 1px solid white;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .battery::after {
+            content: '';
+            position: absolute;
+            right: -3px;
+            top: 3px;
+            width: 2px;
+            height: 4px;
+            background: white;
+            border-radius: 0 1px 1px 0;
+        }
+
+        .battery-fill {
+            width: 80%;
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 1px;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px 25px;
+            text-align: center;
+            position: relative;
+        }
+
+        .app-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .app-subtitle {
+            font-size: 15px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .main-content {
+            padding: 50px 25px;
+            height: calc(100% - 170px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .option-button {
+            background: white;
+            border: none;
+            border-radius: 20px;
+            padding: 35px 25px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .option-button:hover::before {
+            left: 100%;
+        }
+
+        .option-button:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .option-button:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+
+        .option-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .option-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .qr-icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .nfc-icon {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .option-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .option-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 6px;
+        }
+
+        .option-description {
+            font-size: 14px;
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+
+        .scanner-view {
+            display: none;
+            height: calc(100% - 170px);
+            background: #f8f9fa;
+        }
+
+        .scanner-header {
+            display: flex;
+            align-items: center;
+            padding: 20px 20px 0;
+            background: #f8f9fa;
+        }
+
+        .back-button {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            margin-right: 15px;
+        }
+
+        .back-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .scanner-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .scanner-content {
+            padding: 30px 25px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 80px);
+        }
+
+        .scanner-area {
+            width: 100%;
+            height: 280px;
+            background: #000;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+            display: none;
+        }
+
+        .camera-placeholder {
+            position: absolute;
+            color: white;
+            text-align: center;
+            font-size: 14px;
+            z-index: 1;
+            padding: 20px;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .scanner-frame {
+            width: 220px;
+            height: 220px;
+            position: relative;
+            border: 3px solid transparent;
+            border-radius: 20px;
+            background: linear-gradient(white, white) padding-box,
+                        linear-gradient(45deg, #667eea, #764ba2) border-box;
+        }
+
+        .scanner-corners {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border: 4px solid #667eea;
+            border-radius: 3px;
+        }
+
+        .corner-tl { 
+            top: -4px; 
+            left: -4px; 
+            border-right: none; 
+            border-bottom: none;
+            border-top-left-radius: 8px;
+        }
+        .corner-tr { 
+            top: -4px; 
+            right: -4px; 
+            border-left: none; 
+            border-bottom: none;
+            border-top-right-radius: 8px;
+        }
+        .corner-bl { 
+            bottom: -4px; 
+            left: -4px; 
+            border-right: none; 
+            border-top: none;
+            border-bottom-left-radius: 8px;
+        }
+        .corner-br { 
+            bottom: -4px; 
+            right: -4px; 
+            border-left: none; 
+            border-top: none;
+            border-bottom-right-radius: 8px;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            border-radius: 2px;
+            animation: scan 2.5s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        @keyframes scan {
+            0%, 10% { transform: translateY(0); opacity: 1; }
+            90%, 100% { transform: translateY(212px); opacity: 1; }
+        }
+
+        .scanner-status {
+            text-align: center;
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .scanner-instructions {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .instruction-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .instruction-number {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .nfc-view {
+            display: none;
+            height: calc(100% - 170px);
+            background: #f8f9fa;
+        }
+
+        .nfc-detector {
+            width: 100%;
+            height: 280px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .nfc-waves {
+            width: 130px;
+            height: 130px;
+            border: 3px solid #f5576c;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(245, 87, 108, 0.05);
+        }
+
+        .nfc-waves::before,
+        .nfc-waves::after {
+            content: '';
+            position: absolute;
+            border: 2px solid #f5576c;
+            border-radius: 50%;
+        }
+
+        .nfc-waves::before {
+            width: 180px;
+            height: 180px;
+            animation: pulse 2s ease-in-out infinite;
+            opacity: 0.6;
+        }
+
+        .nfc-waves::after {
+            width: 230px;
+            height: 230px;
+            animation: pulse 2s ease-in-out infinite 0.7s;
+            opacity: 0.4;
+        }
+
+        @keyframes pulse {
+            0% { 
+                transform: scale(0.8); 
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 0.4;
+            }
+            100% { 
+                transform: scale(1.3); 
+                opacity: 0;
+            }
+        }
+
+        .nfc-icon-center {
+            font-size: 30px;
+            color: #f5576c;
+            z-index: 1;
+        }
+
+        .result-display {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border-left: 5px solid #4CAF50;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-icon {
+            width: 24px;
+            height: 24px;
+            background: #4CAF50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .result-text {
+            color: #7f8c8d;
+            word-break: break-all;
+            font-size: 14px;
+            line-height: 1.5;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        /* Desktop specific styles */
+        @media (min-width: 768px) {
+            .camera-placeholder {
+                font-size: 16px;
+            }
+            
+            .desktop-note {
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 15px;
+                font-size: 13px;
+                color: #856404;
+                text-align: center;
+            }
+        }
+
+        .camera-controls {
+            display: none;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .camera-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .camera-button:hover {
+            background: #5a6fd8;
+        }
+
+        .camera-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="status-bar">
+            <div class="time" id="currentTime">9:41 AM</div>
+            <div class="battery-signal">
+                <div class="signal-bar" style="height: 4px;"></div>
+                <div class="signal-bar" style="height: 6px;"></div>
+                <div class="signal-bar" style="height: 8px;"></div>
+                <div class="battery">
+                    <div class="battery-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-header">
+            <div class="app-title">SecureTag</div>
+            <div class="app-subtitle">Advanced QR & NFC Scanner</div>
+        </div>
+
+        <div class="main-content" id="mainView">
+            <div class="options-container">
+                <button class="option-button" onclick="showQRScanner()">
+                    <div class="option-content">
+                        <div class="option-icon qr-icon">📱</div>
+                        <div class="option-text">
+                            <div class="option-title">QR Code Scanner</div>
+                            <div class="option-description">Scan QR codes with high precision and security</div>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="option-button" onclick="showNFCScanner()">
+                    <div class="option-content">
+                        <div class="option-icon nfc-icon">📡</div>
+                        <div class="option-text">
+                            <div class="option-title">NFC Tag Reader</div>
+                            <div class="option-description">Detect and read nearby NFC tags instantly</div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div class="scanner-view" id="qrView">
+            <div class="scanner-header">
+                <button class="back-button" onclick="showMainView()">←</button>
+                <div class="scanner-title">QR Scanner</div>
+            </div>
+            
+            <div class="scanner-content">
+                <div class="desktop-note" id="desktopNote" style="display: none;">
+                    💡 Desktop detected: Camera may work better in mobile browsers or use manual QR input below
+                </div>
+
+                <div class="scanner-area">
+                    <div class="camera-placeholder" id="cameraPlaceholder">
+                        Click "Start Camera" to begin scanning
+                    </div>
+                    <video id="video" autoplay playsinline muted></video>
+                    <div class="camera-overlay">
+                        <div class="scanner-frame">
+                            <div class="scanner-corners corner-tl"></div>
+                            <div class="scanner-corners corner-tr"></div>
+                            <div class="scanner-corners corner-bl"></div>
+                            <div class="scanner-corners corner-br"></div>
+                            <div class="scan-line"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="camera-controls" id="cameraControls">
+                    <button class="camera-button" onclick="startCamera()" id="startBtn">Start Camera</button>
+                    <button class="camera-button" onclick="stopCamera()" id="stopBtn" disabled>Stop Camera</button>
+                    <button class="camera-button" onclick="switchCamera()" id="switchBtn" disabled>Switch Camera</button>
+                </div>
+                
+                <div class="scanner-status" id="scannerStatus">Click "Start Camera" to begin scanning</div>
+                
+                <div class="scanner-instructions">
+                    <div class="instruction-item">
+                        <div class="instruction-number">1</div>
+                        <span>Allow camera permission when prompted</span>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-number">2</div>
+                        <span>Hold your device steady with good lighting</span>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-number">3</div>
+                        <span>Position QR code within the frame</span>
+                    </div>
+                </div>
+
+                <div class="loading-indicator" id="qrLoading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Processing QR code...</div>
+                </div>
+                
+                <div class="result-display" id="qrResult">
+                    <div class="result-header">
+                        <div class="result-icon">✓</div>
+                        <div class="result-title">QR Code Detected</div>
+                    </div>
+                    <div class="result-text" id="qrResultText"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nfc-view" id="nfcView">
+            <div class="scanner-header">
+                <button class="back-button" onclick="showMainView()">←</button>
+                <div class="scanner-title">NFC Reader</div>
+            </div>
+            
+            <div class="scanner-content">
+                <div class="nfc-detector">
+                    <div class="nfc-waves">
+                        <div class="nfc-icon-center">📡</div>
+                    </div>
+                </div>
+                
+                <div class="scanner-status">Hold device near NFC tag to scan</div>
+                
+                <div class="scanner-instructions">
+                    <div class="instruction-item">
+                        <div class="instruction-number">1</div>
+                        <span>Enable NFC in device settings</span>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-number">2</div>
+                        <span>Hold device close to NFC tag</span>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-number">3</div>
+                        <span>Wait for detection confirmation</span>
+                    </div>
+                </div>
+
+                <div class="loading-indicator" id="nfcLoading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Detecting NFC tag...</div>
+                </div>
+                
+                <div class="result-display" id="nfcResult">
+                    <div class="result-header">
+                        <div class="result-icon">📡</div>
+                        <div class="result-title">NFC Tag Detected</div>
+                    </div>
+                    <div class="result-text" id="nfcResultText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+    <script>
+        let videoStream = null;
+        let scanning = false;
+        let scanningInterval = null;
+        let currentFacingMode = 'environment';
+        let availableCameras = [];
+        
+        // Backend API configuration
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        // Check if running on desktop
+        function isDesktop() {
+            return window.innerWidth >= 768 && !('ontouchstart' in window);
+        }
+
+        // Initialize app
+        function initApp() {
+            updateTime();
+            setInterval(updateTime, 60000); // Update every minute
+            
+            if (isDesktop()) {
+                document.getElementById('desktopNote').style.display = 'block';
+                document.getElementById('cameraControls').style.display = 'block';
+            }
+            
+            // Get available cameras
+            getCameraDevices();
+        }
+
+        async function getCameraDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                availableCameras = devices.filter(device => device.kind === 'videoinput');
+                console.log('Available cameras:', availableCameras.length);
+            } catch (error) {
+                console.error('Error getting camera devices:', error);
+            }
+        }
+
+        function showMainView() {
+            document.getElementById('mainView').style.display = 'flex';
+            document.getElementById('qrView').style.display = 'none';
+            document.getElementById('nfcView').style.display = 'none';
+            stopCamera();
+            resetResults();
+        }
+
+        async function showQRScanner() {
+            document.getElementById('mainView').style.display = 'none';
+            document.getElementById('qrView').style.display = 'block';
+            document.getElementById('nfcView').style.display = 'none';
+            
+            if (!isDesktop()) {
+                // Auto-start camera on mobile
+                try {
+                    await startCamera();
+                } catch (error) {
+                    console.error('Error auto-starting camera:', error);
+                    showCameraError(error.message);
+                }
+            }
+        }
+
+        function showNFCScanner() {
+            document.getElementById('mainView').style.display = 'none';
+            document.getElementById('qrView').style.display = 'none';
+            document.getElementById('nfcView').style.display = 'block';
+            
+            // Show loading after 3 seconds, then result after 5 seconds
+            setTimeout(() => {
+                document.getElementById('nfcLoading').style.display = 'block';
+            }, 3000);
+            
+            setTimeout(() => {
+                simulateNFCDetection();
+            }, 5000);
+        }
+
+        async function startCamera() {
+            const video = document.getElementById('video');
+            const placeholder = document.getElementById('cameraPlaceholder');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const switchBtn = document.getElementById('switchBtn');
+            const status = document.getElementById('scannerStatus');
+            
+            try {
+                startBtn.disabled = true;
+                placeholder.textContent = 'Requesting camera access...';
+                status.textContent = 'Starting camera...';
+                
+                // Stop any existing stream
+                if (videoStream) {
+                    videoStream.getTracks().forEach(track => track.stop());
+                }
+                
+                // Camera constraints
+                const constraints = {
+                    video: {
+                        facingMode: currentFacingMode,
+                        width: { min: 640, ideal: 1280, max: 1920 },
+                        height: { min: 480, ideal: 720, max: 1080 }
+                    },
+                    audio: false
+                };
+                
+                // Request camera access
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = videoStream;
+                
+                return new Promise((resolve, reject) => {
+                    video.onloadedmetadata = () => {
+                        video.play().then(() => {
+                            // Hide placeholder and show video
+                            placeholder.style.display = 'none';
+                            video.style.display = 'block';
+                            status.textContent = 'Position QR code within the scanner frame';
+                            
+                            // Update button states
+                            startBtn.disabled = true;
+                            stopBtn.disabled = false;
+                            switchBtn.disabled = availableCameras.length <= 1;
+                            
+                            // Start scanning
+                            startQRScanning();
+                            resolve();
+                        }).catch(reject);
+                    };
+                    
+                    video.onerror = reject;
+                    
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        reject(new Error('Camera loading timeout'));
+                    }, 10000);
+                });
+            } catch (error) {
+                console.error('Camera error:', error);
+                showCameraError(error.message);
+                startBtn.disabled = false;
+                throw error;
+            }
+        }
+
+        function stopCamera() {
+            const video = document.getElementById('video');
+            const placeholder = document.getElementById('cameraPlaceholder');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const switchBtn = document.getElementById('switchBtn');
+            const status = document.getElementById('scannerStatus');
+            
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            
+            if (scanningInterval) {
+                clearInterval(scanningInterval);
+                scanningInterval = null;
+            }
+            
+            
+            // Reset UI
+            video.style.display = 'none';
+            placeholder.style.display = 'block';
+            placeholder.textContent = 'Click "Start Camera" to begin scanning';
+            status.textContent = 'Click "Start Camera" to begin scanning';
+            
+            // Update button states
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            switchBtn.disabled = true;
+        }
+
+        async function switchCamera() {
+            if (availableCameras.length <= 1) return;
+            
+            // Toggle between front and back camera
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            
+            try {
+                await startCamera();
+            } catch (error) {
+                // If switching fails, revert back
+                currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+                console.error('Error switching camera:', error);
+            }
+        }
+
+        function startQRScanning() {
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            scanning = true;
+            
+            scanningInterval = setInterval(() => {
+                if (!scanning || video.readyState !== video.HAVE_ENOUGH_DATA) {
+                    return;
+                }
+                
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    scanning = false;
+                    clearInterval(scanningInterval);
+                    verifyQRCodeWithBackend(code.data);
+                }
+            }, 100);
+        }
+
+        async function verifyQRCodeWithBackend(qrCode) {
+            const loadingDiv = document.getElementById('qrLoading');
+            loadingDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/verify-qr`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ qrCode: qrCode })
+                });
+
+                const result = await response.json();
+                loadingDiv.style.display = 'none';
+                
+                if (result.verified) {
+                    showVerifiedResult(result);
+                } else {
+                    showNotVerifiedResult(result);
+                }
+                
+            } catch (error) {
+                console.error('Error verifying QR code:', error);
+                loadingDiv.style.display = 'none';
+                showOfflineResult(qrCode);
+            }
+        }
+
+        function showVerifiedResult(result) {
+            const resultDiv = document.getElementById('qrResult');
+            const resultText = document.getElementById('qrResultText');
+            const resultIcon = document.querySelector('#qrResult .result-icon');
+            const resultTitle = document.querySelector('#qrResult .result-title');
+            
+            // Set verified styling
+            resultDiv.style.borderLeftColor = '#4CAF50';
+            resultIcon.textContent = '✓';
+            resultIcon.style.background = '#4CAF50';
+            resultTitle.textContent = 'QR Code VERIFIED ✓';
+            
+            // Format the verified data
+            const data = result.data;
+            const formattedText = `Name: ${data.name}
+Department: ${data.department}
+Access Level: ${data.accessLevel}
+Valid Until: ${new Date(data.validUntil).toLocaleDateString()}
+Verified At: ${new Date(data.verifiedAt).toLocaleString()}
+
+QR Code: ${result.qrCode}
+Secure Token: ${data.secureToken.substring(0, 16)}...`;
+            
+            resultText.textContent = formattedText;
+            resultDiv.style.display = 'block';
+            
+            // Stop scanning animation
+            document.querySelector('.scan-line').style.animation = 'none';
+        }
+
+        function showNotVerifiedResult(result) {
+            const resultDiv = document.getElementById('qrResult');
+            const resultText = document.getElementById('qrResultText');
+            const resultIcon = document.querySelector('#qrResult .result-icon');
+            const resultTitle = document.querySelector('#qrResult .result-title');
+            
+            // Set not verified styling
+            resultDiv.style.borderLeftColor = '#e74c3c';
+            resultIcon.textContent = '✕';
+            resultIcon.style.background = '#e74c3c';
+            resultTitle.textContent = 'QR Code NOT VERIFIED ✕';
+            
+            const formattedText = `Status: ${result.message}
+Reason: ${result.description}
+
+Scanned QR Code: ${result.qrCode}
+
+This QR code is not authorized in our system.`;
+            
+            resultText.textContent = formattedText;
+            resultDiv.style.display = 'block';
+            
+            // Stop scanning animation
+            document.querySelector('.scan-line').style.animation = 'none';
+        }
+
+        function showOfflineResult(qrCode) {
+            const resultDiv = document.getElementById('qrResult');
+            const resultText = document.getElementById('qrResultText');
+            const resultIcon = document.querySelector('#qrResult .result-icon');
+            const resultTitle = document.querySelector('#qrResult .result-title');
+            
+            // Set offline styling
+            resultDiv.style.borderLeftColor = '#f39c12';
+            resultIcon.textContent = '⚠';
+            resultIcon.style.background = '#f39c12';
+            resultTitle.textContent = 'Verification Failed';
+            
+            resultText.textContent = `Unable to verify QR code - Backend connection failed.
+
+Scanned QR Code: ${qrCode}
+
+Please check your internet connection and try again.`;
+            
+            resultDiv.style.display = 'block';
+            
+            // Stop scanning animation
+            document.querySelector('.scan-line').style.animation = 'none';
+        }
+
+        function showCameraError(errorMessage) {
+            const resultDiv = document.getElementById('qrResult');
+            const resultText = document.getElementById('qrResultText');
+            const resultIcon = document.querySelector('#qrResult .result-icon');
+            const resultTitle = document.querySelector('#qrResult .result-title');
+            const placeholder = document.getElementById('cameraPlaceholder');
+            const status = document.getElementById('scannerStatus');
+            
+            placeholder.textContent = 'Camera not available';
+            placeholder.style.display = 'block';
+            status.textContent = 'Camera access failed';
+            
+            resultIcon.textContent = '⚠';
+            resultIcon.style.background = '#e74c3c';
+            resultTitle.textContent = 'Camera Error';
+            resultText.textContent = `Camera access failed: ${errorMessage}
+
+Please:
+1. Allow camera permissions when prompted
+2. Ensure camera is not being used by another app
+3. Try refreshing the page
+4. On desktop, try using a mobile device instead`;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.style.borderLeftColor = '#e74c3c';
+        }
+
+        function simulateNFCDetection() {
+            const loadingDiv = document.getElementById('nfcLoading');
+            const resultDiv = document.getElementById('nfcResult');
+            const resultText = document.getElementById('nfcResultText');
+            
+            loadingDiv.style.display = 'none';
+            resultText.textContent = `Tag ID: 04:A3:B2:C1:D4:E5:F6
+Type: NTAG213
+Content: Employee Access Card
+Department: Security
+Name: Sarah Wilson
+Access Level: Level 2
+Valid Until: ${new Date('2024-12-31').toLocaleDateString()}`;
+            resultDiv.style.display = 'block';
+        }
+
+        function resetResults() {
+            document.getElementById('qrResult').style.display = 'none';
+            document.getElementById('nfcResult').style.display = 'none';
+            document.getElementById('qrLoading').style.display = 'none';
+            document.getElementById('nfcLoading').style.display = 'none';
+            
+            // Reset QR result styling
+            const qrResult = document.getElementById('qrResult');
+            qrResult.style.borderLeftColor = '#4CAF50';
+            const resultIcon = qrResult.querySelector('.result-icon');
+            resultIcon.textContent = '✓';
+            resultIcon.style.background = '#4CAF50';
+            const resultTitle = qrResult.querySelector('.result-title');
+            resultTitle.textContent = 'QR Code Detected';
+            
+            // Reset scanning animation
+            document.querySelector('.scan-line').style.animation = 'scan 2.5s ease-in-out infinite';
+        }
+
+        // Initialize app when page loads
+        window.addEventListener('load', initApp);
+
+        // Clean up when page is closed
+        window.addEventListener('beforeunload', () => {
+            stopCamera();
+        });
+    </script>
+</body>
+</html>
+            
+                
