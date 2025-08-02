@@ -257,61 +257,56 @@
             height: calc(100% - 80px);
         }
 
-        /* ULTIMATE FIX: Complete video container solution */
+        /* FIXED: Scanner area with no white space */
         .scanner-area {
             width: 100%;
             height: 280px;
+            background: #000;
             border-radius: 20px;
             margin-bottom: 25px;
             position: relative;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-            background: #000;
+            display: block;
         }
 
-        /* Video element - takes full space */
+        /* FIXED: Video positioning to eliminate white space */
         #video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
             border-radius: 20px;
-            background: #000;
+            display: none;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
             z-index: 1;
         }
 
-        /* Placeholder - centered perfectly */
         .camera-placeholder {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             color: white;
             text-align: center;
             font-size: 14px;
-            z-index: 2;
-            background: #000;
-            border-radius: 20px;
+            z-index: 1;
+            padding: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
         }
 
-        /* Camera overlay - always on top */
         .camera-overlay {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: none;
-            z-index: 10;
+            z-index: 2;
         }
 
         .scanner-frame {
@@ -581,6 +576,10 @@
 
         /* Desktop specific styles */
         @media (min-width: 768px) {
+            .camera-placeholder {
+                font-size: 16px;
+            }
+            
             .desktop-note {
                 background: #fff3cd;
                 border: 1px solid #ffeaa7;
@@ -618,17 +617,6 @@
         .camera-button:disabled {
             background: #ccc;
             cursor: not-allowed;
-        }
-
-        /* Force video to be visible when active */
-        #video.active {
-            display: block !important;
-            opacity: 1 !important;
-        }
-
-        /* Hide placeholder when video is active */
-        .camera-placeholder.hidden {
-            display: none !important;
         }
     </style>
 </head>
@@ -686,9 +674,9 @@
                     💡 Desktop detected: Camera may work better in mobile browsers
                 </div>
 
-                <div class="scanner-area" onclick="startCamera()">
+                <div class="scanner-area">
                     <div class="camera-placeholder" id="cameraPlaceholder">
-                        <div>Click to start camera scanning</div>
+                        Click to start camera scanning
                     </div>
                     <video id="video" autoplay playsinline muted></video>
                     <div class="camera-overlay">
@@ -818,11 +806,8 @@
             setInterval(updateTime, 60000);
             
             if (isDesktop()) {
-                const note = document.getElementById('desktopNote');
-                if (note) note.style.display = 'block';
-                
-                const controls = document.getElementById('cameraControls');
-                if (controls) controls.style.display = 'block';
+                document.getElementById('desktopNote').style.display = 'block';
+                document.getElementById('cameraControls').style.display = 'block';
             }
             
             getCameraDevices();
@@ -850,6 +835,11 @@
             document.getElementById('mainView').style.display = 'none';
             document.getElementById('qrView').style.display = 'block';
             document.getElementById('nfcView').style.display = 'none';
+            
+            // Add click to start camera
+            const scannerArea = document.querySelector('.scanner-area');
+            scannerArea.style.cursor = 'pointer';
+            scannerArea.onclick = startCamera;
             
             if (!isDesktop()) {
                 // Try to auto-start on mobile
@@ -879,6 +869,77 @@
             const placeholder = document.getElementById('cameraPlaceholder');
             const startBtn = document.getElementById('startBtn');
             const stopBtn = document.getElementById('stopBtn');
+            const status = document.getElementById('scannerStatus');
+            
+            try {
+                if (startBtn) startBtn.disabled = true;
+                placeholder.textContent = 'Requesting camera access...';
+                status.textContent = 'Starting camera...';
+                
+                // Stop any existing stream
+                if (videoStream) {
+                    videoStream.getTracks().forEach(track => track.stop());
+                }
+                
+                // Simple camera constraints
+                const constraints = {
+                    video: {
+                        facingMode: currentFacingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+                
+                // Request camera access
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = videoStream;
+                
+                video.onloadedmetadata = () => {
+                    video.play().then(() => {
+                        // Hide placeholder and show video
+                        placeholder.style.display = 'none';
+                        video.style.display = 'block';
+                        
+                        // FIXED: Force video to fill container properly - no white space
+                        video.style.position = 'absolute';
+                        video.style.top = '0';
+                        video.style.left = '0';
+                        video.style.width = '100%';
+                        video.style.height = '100%';
+                        video.style.objectFit = 'cover';
+                        video.style.borderRadius = '20px';
+                        video.style.zIndex = '1';
+                        
+                        status.textContent = 'Position QR code within the scanner frame';
+                        
+                        // Update button states
+                        if (startBtn) startBtn.disabled = true;
+                        if (stopBtn) stopBtn.disabled = false;
+                        
+                        // Start scanning
+                        startQRScanning();
+                        
+                        console.log('✅ Camera started - Video positioned to fill area completely');
+                    }).catch(error => {
+                        console.error('Error playing video:', error);
+                        showCameraError(error.message);
+                    });
+                };
+                
+            } catch (error) {
+                console.error('Camera error:', error);
+                showCameraError(error.message);
+                if (startBtn) startBtn.disabled = false;
+            }
+        }
+
+        function stopCamera() {
+            const video = document.getElementById('video');
+            const placeholder = document.getElementById('cameraPlaceholder');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const status = document.getElementById('scannerStatus');
             
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
@@ -893,17 +954,11 @@
             scanning = false;
             
             // Reset UI
-            if (video) {
-                video.classList.remove('active');
-                video.style.display = 'none';
-            }
-            
+            if (video) video.style.display = 'none';
             if (placeholder) {
-                placeholder.classList.remove('hidden');
-                placeholder.style.display = 'flex';
-                placeholder.innerHTML = '<div>Click to start camera scanning</div>';
+                placeholder.style.display = 'block';
+                placeholder.textContent = 'Click to start camera scanning';
             }
-            
             if (status) status.textContent = 'Tap the camera area to start scanning';
             
             // Update button states
@@ -1055,11 +1110,9 @@ Please check your internet connection and try again.`;
             const placeholder = document.getElementById('cameraPlaceholder');
             const status = document.getElementById('scannerStatus');
             
-            if (placeholder) {
-                placeholder.innerHTML = '<div>Camera not available - Click to retry</div>';
-                placeholder.style.display = 'flex';
-            }
-            if (status) status.textContent = 'Camera access failed - Try again';
+            placeholder.textContent = 'Camera not available - Click to retry';
+            placeholder.style.display = 'block';
+            status.textContent = 'Camera access failed - Try again';
             
             resultIcon.textContent = '⚠';
             resultIcon.style.background = '#e74c3c';
@@ -1119,88 +1172,7 @@ Valid Until: ${new Date('2024-12-31').toLocaleDateString()}`;
             stopCamera();
         });
 
-        console.log('🚀 SecureTag Ultimate Fix loaded - White space guaranteed eliminated!');
+        console.log('✅ SecureTag app loaded successfully! Camera white space issue fixed.');
     </script>
 </body>
 </html>
-            
-            console.log('🎥 Starting camera...');
-            
-            try {
-                if (startBtn) startBtn.disabled = true;
-                
-                // Update UI immediately
-                if (placeholder) {
-                    placeholder.innerHTML = '<div>Requesting camera access...</div>';
-                }
-                if (status) status.textContent = 'Starting camera...';
-                
-                // Stop any existing stream
-                if (videoStream) {
-                    videoStream.getTracks().forEach(track => track.stop());
-                }
-                
-                // Request camera access
-                const constraints = {
-                    video: {
-                        facingMode: currentFacingMode,
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
-                    audio: false
-                };
-                
-                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-                video.srcObject = videoStream;
-                
-                // ULTIMATE FIX: Force video to show and fill space
-                return new Promise((resolve, reject) => {
-                    video.onloadedmetadata = () => {
-                        video.play().then(() => {
-                            console.log('✅ Video playing, applying ultimate fix...');
-                            
-                            // Hide placeholder completely
-                            if (placeholder) {
-                                placeholder.classList.add('hidden');
-                                placeholder.style.display = 'none';
-                            }
-                            
-                            // Show and position video
-                            video.classList.add('active');
-                            video.style.display = 'block';
-                            video.style.visibility = 'visible';
-                            video.style.opacity = '1';
-                            
-                            // Update status
-                            if (status) status.textContent = 'Position QR code within the scanner frame';
-                            
-                            // Update button states
-                            if (startBtn) startBtn.disabled = true;
-                            if (stopBtn) stopBtn.disabled = false;
-                            
-                            // Start scanning
-                            startQRScanning();
-                            
-                            console.log('🎯 Camera setup complete - no white space!');
-                            resolve();
-                        }).catch(reject);
-                    };
-                    
-                    video.onerror = reject;
-                    setTimeout(() => reject(new Error('Video load timeout')), 10000);
-                });
-                
-            } catch (error) {
-                console.error('❌ Camera error:', error);
-                showCameraError(error.message);
-                if (startBtn) startBtn.disabled = false;
-                throw error;
-            }
-        }
-
-        function stopCamera() {
-            const video = document.getElementById('video');
-            const placeholder = document.getElementById('cameraPlaceholder');
-            const startBtn = document.getElementById('startBtn');
-            const stopBtn = document.getElementById('stopBtn');
-            const status = document.getElementById('scannerStatus');
