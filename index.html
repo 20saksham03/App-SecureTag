@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureTag - QR & NFC Scanner</title>
     <meta name="description" content="Advanced QR & NFC Scanner with secure backend verification">
-    <meta name="keywords" content="QR code, NFC, scanner, security, verification">
-    <meta name="author" content="SecureTag App">
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>">
+    <!-- Basic PWA Meta (minimal) -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     
     <style>
         * {
@@ -257,6 +257,7 @@
             height: calc(100% - 80px);
         }
 
+        /* FIXED: Scanner area with no white space */
         .scanner-area {
             width: 100%;
             height: 280px;
@@ -266,17 +267,20 @@
             position: relative;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            display: block;
         }
 
+        /* FIXED: Video positioning to eliminate white space */
         #video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
             border-radius: 20px;
             display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 1;
         }
 
         .camera-placeholder {
@@ -286,6 +290,10 @@
             font-size: 14px;
             z-index: 1;
             padding: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
         }
 
         .camera-overlay {
@@ -663,12 +671,12 @@
             
             <div class="scanner-content">
                 <div class="desktop-note" id="desktopNote" style="display: none;">
-                    💡 Desktop detected: Camera may work better in mobile browsers or use manual QR input below
+                    💡 Desktop detected: Camera may work better in mobile browsers
                 </div>
 
                 <div class="scanner-area">
                     <div class="camera-placeholder" id="cameraPlaceholder">
-                        Click "Start Camera" to begin scanning
+                        Click to start camera scanning
                     </div>
                     <video id="video" autoplay playsinline muted></video>
                     <div class="camera-overlay">
@@ -685,10 +693,9 @@
                 <div class="camera-controls" id="cameraControls">
                     <button class="camera-button" onclick="startCamera()" id="startBtn">Start Camera</button>
                     <button class="camera-button" onclick="stopCamera()" id="stopBtn" disabled>Stop Camera</button>
-                    <button class="camera-button" onclick="switchCamera()" id="switchBtn" disabled>Switch Camera</button>
                 </div>
                 
-                <div class="scanner-status" id="scannerStatus">Click "Start Camera" to begin scanning</div>
+                <div class="scanner-status" id="scannerStatus">Tap the camera area to start scanning</div>
                 
                 <div class="scanner-instructions">
                     <div class="instruction-item">
@@ -796,14 +803,13 @@
         // Initialize app
         function initApp() {
             updateTime();
-            setInterval(updateTime, 60000); // Update every minute
+            setInterval(updateTime, 60000);
             
             if (isDesktop()) {
                 document.getElementById('desktopNote').style.display = 'block';
                 document.getElementById('cameraControls').style.display = 'block';
             }
             
-            // Get available cameras
             getCameraDevices();
         }
 
@@ -825,19 +831,21 @@
             resetResults();
         }
 
-        async function showQRScanner() {
+        function showQRScanner() {
             document.getElementById('mainView').style.display = 'none';
             document.getElementById('qrView').style.display = 'block';
             document.getElementById('nfcView').style.display = 'none';
             
+            // Add click to start camera
+            const scannerArea = document.querySelector('.scanner-area');
+            scannerArea.style.cursor = 'pointer';
+            scannerArea.onclick = startCamera;
+            
             if (!isDesktop()) {
-                // Auto-start camera on mobile
-                try {
-                    await startCamera();
-                } catch (error) {
-                    console.error('Error auto-starting camera:', error);
-                    showCameraError(error.message);
-                }
+                // Try to auto-start on mobile
+                setTimeout(() => {
+                    startCamera();
+                }, 500);
             }
         }
 
@@ -861,11 +869,10 @@
             const placeholder = document.getElementById('cameraPlaceholder');
             const startBtn = document.getElementById('startBtn');
             const stopBtn = document.getElementById('stopBtn');
-            const switchBtn = document.getElementById('switchBtn');
             const status = document.getElementById('scannerStatus');
             
             try {
-                startBtn.disabled = true;
+                if (startBtn) startBtn.disabled = true;
                 placeholder.textContent = 'Requesting camera access...';
                 status.textContent = 'Starting camera...';
                 
@@ -874,12 +881,12 @@
                     videoStream.getTracks().forEach(track => track.stop());
                 }
                 
-                // Camera constraints
+                // Simple camera constraints
                 const constraints = {
                     video: {
                         facingMode: currentFacingMode,
-                        width: { min: 640, ideal: 1280, max: 1920 },
-                        height: { min: 480, ideal: 720, max: 1080 }
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
                     },
                     audio: false
                 };
@@ -888,37 +895,42 @@
                 videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = videoStream;
                 
-                return new Promise((resolve, reject) => {
-                    video.onloadedmetadata = () => {
-                        video.play().then(() => {
-                            // Hide placeholder and show video
-                            placeholder.style.display = 'none';
-                            video.style.display = 'block';
-                            status.textContent = 'Position QR code within the scanner frame';
-                            
-                            // Update button states
-                            startBtn.disabled = true;
-                            stopBtn.disabled = false;
-                            switchBtn.disabled = availableCameras.length <= 1;
-                            
-                            // Start scanning
-                            startQRScanning();
-                            resolve();
-                        }).catch(reject);
-                    };
-                    
-                    video.onerror = reject;
-                    
-                    // Timeout after 10 seconds
-                    setTimeout(() => {
-                        reject(new Error('Camera loading timeout'));
-                    }, 10000);
-                });
+                video.onloadedmetadata = () => {
+                    video.play().then(() => {
+                        // Hide placeholder and show video
+                        placeholder.style.display = 'none';
+                        video.style.display = 'block';
+                        
+                        // FIXED: Force video to fill container properly - no white space
+                        video.style.position = 'absolute';
+                        video.style.top = '0';
+                        video.style.left = '0';
+                        video.style.width = '100%';
+                        video.style.height = '100%';
+                        video.style.objectFit = 'cover';
+                        video.style.borderRadius = '20px';
+                        video.style.zIndex = '1';
+                        
+                        status.textContent = 'Position QR code within the scanner frame';
+                        
+                        // Update button states
+                        if (startBtn) startBtn.disabled = true;
+                        if (stopBtn) stopBtn.disabled = false;
+                        
+                        // Start scanning
+                        startQRScanning();
+                        
+                        console.log('✅ Camera started - Video positioned to fill area completely');
+                    }).catch(error => {
+                        console.error('Error playing video:', error);
+                        showCameraError(error.message);
+                    });
+                };
+                
             } catch (error) {
                 console.error('Camera error:', error);
                 showCameraError(error.message);
-                startBtn.disabled = false;
-                throw error;
+                if (startBtn) startBtn.disabled = false;
             }
         }
 
@@ -927,7 +939,6 @@
             const placeholder = document.getElementById('cameraPlaceholder');
             const startBtn = document.getElementById('startBtn');
             const stopBtn = document.getElementById('stopBtn');
-            const switchBtn = document.getElementById('switchBtn');
             const status = document.getElementById('scannerStatus');
             
             if (videoStream) {
@@ -940,32 +951,19 @@
                 scanningInterval = null;
             }
             
+            scanning = false;
             
             // Reset UI
-            video.style.display = 'none';
-            placeholder.style.display = 'block';
-            placeholder.textContent = 'Click "Start Camera" to begin scanning';
-            status.textContent = 'Click "Start Camera" to begin scanning';
+            if (video) video.style.display = 'none';
+            if (placeholder) {
+                placeholder.style.display = 'block';
+                placeholder.textContent = 'Click to start camera scanning';
+            }
+            if (status) status.textContent = 'Tap the camera area to start scanning';
             
             // Update button states
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-            switchBtn.disabled = true;
-        }
-
-        async function switchCamera() {
-            if (availableCameras.length <= 1) return;
-            
-            // Toggle between front and back camera
-            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
-            
-            try {
-                await startCamera();
-            } catch (error) {
-                // If switching fails, revert back
-                currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
-                console.error('Error switching camera:', error);
-            }
+            if (startBtn) startBtn.disabled = false;
+            if (stopBtn) stopBtn.disabled = true;
         }
 
         function startQRScanning() {
@@ -1112,20 +1110,20 @@ Please check your internet connection and try again.`;
             const placeholder = document.getElementById('cameraPlaceholder');
             const status = document.getElementById('scannerStatus');
             
-            placeholder.textContent = 'Camera not available';
+            placeholder.textContent = 'Camera not available - Click to retry';
             placeholder.style.display = 'block';
-            status.textContent = 'Camera access failed';
+            status.textContent = 'Camera access failed - Try again';
             
             resultIcon.textContent = '⚠';
             resultIcon.style.background = '#e74c3c';
             resultTitle.textContent = 'Camera Error';
             resultText.textContent = `Camera access failed: ${errorMessage}
 
-Please:
+Tips to fix:
 1. Allow camera permissions when prompted
-2. Ensure camera is not being used by another app
-3. Try refreshing the page
-4. On desktop, try using a mobile device instead`;
+2. Refresh the page and try again
+3. Check if another app is using the camera
+4. Try using HTTPS instead of HTTP`;
             
             resultDiv.style.display = 'block';
             resultDiv.style.borderLeftColor = '#e74c3c';
@@ -1173,8 +1171,8 @@ Valid Until: ${new Date('2024-12-31').toLocaleDateString()}`;
         window.addEventListener('beforeunload', () => {
             stopCamera();
         });
+
+        console.log('✅ SecureTag app loaded successfully! Camera white space issue fixed.');
     </script>
 </body>
 </html>
-            
-                
