@@ -276,11 +276,11 @@
             height: 100% !important;
             object-fit: cover !important;
             border-radius: 20px;
-            display: none;
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
             z-index: 1;
+            display: block !important;
         }
 
         .camera-placeholder {
@@ -896,10 +896,12 @@
                 video.srcObject = videoStream;
                 
                 video.onloadedmetadata = () => {
+                    video.style.display = 'block';
+                    placeholder.style.display = 'none';
                     video.play().then(() => {
                         // Hide placeholder and show video
                         placeholder.style.display = 'none';
-                        video.style.display = 'block';
+                        
                         
                         // FIXED: Force video to fill container properly - no white space
                         video.style.position = 'absolute';
