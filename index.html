@@ -883,19 +883,26 @@
                     videoStream.getTracks().forEach(track => track.stop());
                 }
                 
-                // Simple camera constraints
+                // Try different camera constraints for better compatibility
                 const constraints = {
                     video: {
                         facingMode: currentFacingMode,
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        width: { ideal: 1920, min: 640 },
+                        height: { ideal: 1080, min: 480 }
                     },
                     audio: false
                 };
                 
+                console.log('📷 Requesting camera with constraints:', constraints);
+                
                 // Request camera access
                 videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = videoStream;
+                
+                // Log camera capabilities
+                const track = videoStream.getVideoTracks()[0];
+                const settings = track.getSettings();
+                console.log('📷 Camera settings:', settings);
                 
                 // Wait for video to be ready
                 video.onloadedmetadata = () => {
@@ -905,15 +912,19 @@
                         video.style.display = 'block';
                         
                         status.textContent = 'Position QR code within the scanner frame';
+                        status.style.color = '#2c3e50';
                         
                         // Update button states
                         if (startBtn) startBtn.disabled = true;
                         if (stopBtn) stopBtn.disabled = false;
                         
-                        // Start scanning
-                        startQRScanning();
+                        // Start scanning after a brief delay to ensure video is stable
+                        setTimeout(() => {
+                            startQRScanning();
+                        }, 500);
                         
                         console.log('✅ Camera started successfully');
+                        console.log('📐 Video dimensions:', video.videoWidth, 'x', video.videoHeight);
                     }).catch(error => {
                         console.error('Error playing video:', error);
                         showCameraError(error.message);
@@ -968,6 +979,7 @@
             const ctx = canvas.getContext('2d');
             
             scanning = true;
+            console.log('🔍 QR Scanning started...');
             
             scanningInterval = setInterval(() => {
                 if (!scanning || video.readyState !== video.HAVE_ENOUGH_DATA) {
@@ -979,14 +991,67 @@
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                // Try multiple scan attempts with different parameters
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert"
+                });
                 
                 if (code) {
+                    console.log('✅ QR Code detected:', code.data);
                     scanning = false;
                     clearInterval(scanningInterval);
+                    
+                    // Play a sound or vibrate if available
+                    if (navigator.vibrate) {
+                        navigator.vibrate(200);
+                    }
+                    
+                    // Show the raw QR data immediately for testing
+                    showQRDetectedResult(code.data);
+                    
+                    // Then verify with backend
                     verifyQRCodeWithBackend(code.data);
+                } else {
+                    // Try with inversion
+                    const codeInverted = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: "onlyInvert"
+                    });
+                    
+                    if (codeInverted) {
+                        console.log('✅ QR Code detected (inverted):', codeInverted.data);
+                        scanning = false;
+                        clearInterval(scanningInterval);
+                        
+                        if (navigator.vibrate) {
+                            navigator.vibrate(200);
+                        }
+                        
+                        showQRDetectedResult(codeInverted.data);
+                        verifyQRCodeWithBackend(codeInverted.data);
+                    }
                 }
             }, 100);
+        }
+
+        // New function to show immediate detection feedback
+        function showQRDetectedResult(qrData) {
+            const status = document.getElementById('scannerStatus');
+            status.textContent = '✅ QR Code detected! Verifying...';
+            status.style.color = '#4CAF50';
+            
+            // Show a temporary result while verifying
+            const resultDiv = document.getElementById('qrResult');
+            const resultText = document.getElementById('qrResultText');
+            const resultIcon = document.querySelector('#qrResult .result-icon');
+            const resultTitle = document.querySelector('#qrResult .result-title');
+            
+            resultDiv.style.borderLeftColor = '#667eea';
+            resultIcon.textContent = '🔍';
+            resultIcon.style.background = '#667eea';
+            resultTitle.textContent = 'QR Code Detected';
+            resultText.textContent = `Scanned Data: ${qrData}\n\nVerifying with backend...`;
+            resultDiv.style.display = 'block';
         }
 
         async function verifyQRCodeWithBackend(qrCode) {
@@ -994,6 +1059,8 @@
             loadingDiv.style.display = 'block';
             
             try {
+                console.log('📡 Verifying QR code with backend:', qrCode);
+                
                 const response = await fetch(`${API_BASE_URL}/verify-qr`, {
                     method: 'POST',
                     headers: {
@@ -1003,6 +1070,8 @@
                 });
 
                 const result = await response.json();
+                console.log('📡 Backend response:', result);
+                
                 loadingDiv.style.display = 'none';
                 
                 if (result.verified) {
@@ -1012,8 +1081,10 @@
                 }
                 
             } catch (error) {
-                console.error('Error verifying QR code:', error);
+                console.error('❌ Error verifying QR code:', error);
                 loadingDiv.style.display = 'none';
+                
+                // For testing, show the QR content even if backend fails
                 showOfflineResult(qrCode);
             }
         }
