@@ -776,6 +776,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+    <script src="config.js"></script>
     <script>
         let videoStream = null;
         let scanning = false;
@@ -783,8 +784,10 @@
         let currentFacingMode = 'environment';
         let availableCameras = [];
         
-        // Backend API configuration
-        const API_BASE_URL = 'http://localhost:3000/api';
+        // Backend API configuration - NOW USING CONFIG.JS
+        const API_BASE_URL = CONFIG.API_BASE_URL;
+        
+        console.log('🔧 Using API URL:', API_BASE_URL);
 
         // Update time
         function updateTime() {
@@ -1239,7 +1242,8 @@ Valid Until: ${new Date('2024-12-31').toLocaleDateString()}`;
             stopCamera();
         });
 
-        console.log('✅ SecureTag app loaded successfully! Camera white space issue fixed.');
+        console.log('✅ SecureTag app loaded successfully!');
+        console.log('🔧 Test QR Codes:', CONFIG.TEST_QR_CODES);
     </script>
 </body>
 </html>
