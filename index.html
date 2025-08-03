@@ -251,19 +251,19 @@
         }
 
         .scanner-content {
-            padding: 30px 25px;
+            padding: 20px 25px; /* Reduced top padding to accommodate larger scanner */
             display: flex;
             flex-direction: column;
             height: calc(100% - 80px);
         }
 
-        /* FIXED: Scanner area with proper black background */
+        /* FIXED: Scanner area with proper black background - INCREASED SIZE */
         .scanner-area {
             width: 100%;
-            height: 280px;
+            height: 380px; /* Increased from 280px to 380px */
             background: #000; /* Ensure black background */
             border-radius: 20px;
-            margin-bottom: 25px;
+            margin-bottom: 20px; /* Reduced margin to fit larger scanner */
             position: relative;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0,0,0,0.08);
@@ -313,8 +313,8 @@
         }
 
         .scanner-frame {
-            width: 220px;
-            height: 220px;
+            width: 280px; /* Increased from 220px */
+            height: 280px; /* Increased from 220px */
             position: relative;
             border: 3px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
@@ -323,8 +323,8 @@
 
         .scanner-corners {
             position: absolute;
-            width: 25px;
-            height: 25px;
+            width: 30px; /* Increased from 25px */
+            height: 30px; /* Increased from 25px */
             border: 4px solid #667eea;
             border-radius: 3px;
         }
@@ -372,7 +372,7 @@
 
         @keyframes scan {
             0%, 10% { transform: translateY(0); opacity: 1; }
-            90%, 100% { transform: translateY(212px); opacity: 1; }
+            90%, 100% { transform: translateY(272px); opacity: 1; } /* Adjusted for larger frame */
         }
 
         .scanner-status {
@@ -425,13 +425,13 @@
 
         .nfc-detector {
             width: 100%;
-            height: 280px;
+            height: 380px; /* Increased to match QR scanner height */
             background: white;
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px; /* Reduced margin */
             position: relative;
             box-shadow: 0 8px 25px rgba(0,0,0,0.08);
             overflow: hidden;
