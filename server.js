@@ -133,6 +133,11 @@ app.get('/api/stats', (req, res) => {
     });
 });
 
+// Root endpoint
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // Serve index.html for all other routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -147,8 +152,8 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start server
-app.listen(PORT, () => {
+// Start server with 0.0.0.0 binding for Railway
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('\n🚀 SecureTag Backend Server Started!');
     console.log('📍 Port:', PORT);
     console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
@@ -166,3 +171,34 @@ app.listen(PORT, () => {
     console.log('📊 Stats available at: /api/stats');
     console.log('❤️  Health check at: /api/health\n');
 });
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing HTTP server');
+    server.close(() => {
+        console.log('HTTP server closed');
+        process.exit(0);
+    });
+});
+
+// Keep process alive and handle errors
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    // Don't exit on uncaught exceptions in production
+    if (process.env.NODE_ENV !== 'production') {
+        process.exit(1);
+    }
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Don't exit on unhandled rejections in production
+    if (process.env.NODE_ENV !== 'production') {
+        process.exit(1);
+    }
+});
+
+// For Railway health checks
+if (process.env.RAILWAY_ENVIRONMENT) {
+    console.log('🚂 Running on Railway!');
+}
