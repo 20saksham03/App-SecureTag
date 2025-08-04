@@ -5,7 +5,6 @@ const OFFLINE_URL = '/index.html';
 const FILES_TO_CACHE = [
   '/',
   '/index.html',
-  '/server.js',
   '/manifest.json',
   'https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js'
 ];
