@@ -259,13 +259,13 @@
 
         .scanner-area {
             width: 100%;
-            height: 380px;
+            height: 500px;
             background: #000;
-            border-radius: 20px;
+            border-radius: 30px;
             margin-bottom: 20px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -285,13 +285,14 @@
             position: absolute;
             color: white;
             text-align: center;
-            font-size: 16px;
+            font-size: 20px;
             z-index: 2;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: 500;
         }
 
         .camera-placeholder:hover {
@@ -326,49 +327,49 @@
         }
 
         .scanner-frame {
-            width: 280px;
-            height: 280px;
+            width: 400px;
+            height: 400px;
             position: relative;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px;
             background: transparent;
         }
 
         .scanner-corners {
             position: absolute;
-            width: 30px;
-            height: 30px;
-            border: 4px solid #667eea;
-            border-radius: 3px;
+            width: 60px;
+            height: 60px;
+            border: 8px solid #667eea;
+            border-radius: 12px;
         }
 
         .corner-tl { 
-            top: -4px; 
-            left: -4px; 
+            top: -10px; 
+            left: -10px; 
             border-right: none; 
             border-bottom: none;
-            border-top-left-radius: 8px;
+            border-top-left-radius: 15px;
         }
         .corner-tr { 
-            top: -4px; 
-            right: -4px; 
+            top: -10px; 
+            right: -10px; 
             border-left: none; 
             border-bottom: none;
-            border-top-right-radius: 8px;
+            border-top-right-radius: 15px;
         }
         .corner-bl { 
-            bottom: -4px; 
-            left: -4px; 
+            bottom: -10px; 
+            left: -10px; 
             border-right: none; 
             border-top: none;
-            border-bottom-left-radius: 8px;
+            border-bottom-left-radius: 15px;
         }
         .corner-br { 
-            bottom: -4px; 
-            right: -4px; 
+            bottom: -10px; 
+            right: -10px; 
             border-left: none; 
             border-top: none;
-            border-bottom-right-radius: 8px;
+            border-bottom-right-radius: 15px;
         }
 
         .scan-line {
@@ -376,24 +377,24 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 10px;
             background: linear-gradient(90deg, transparent, #667eea, transparent);
-            border-radius: 2px;
+            border-radius: 5px;
             animation: scan 2.5s ease-in-out infinite;
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 0 35px rgba(102, 126, 234, 0.9);
         }
 
         @keyframes scan {
             0%, 10% { transform: translateY(0); opacity: 1; }
-            90%, 100% { transform: translateY(272px); opacity: 1; }
+            90%, 100% { transform: translateY(392px); opacity: 1; }
         }
 
         .scanner-status {
             text-align: center;
-            font-size: 16px;
+            font-size: 18px;
             color: #2c3e50;
             margin-bottom: 20px;
-            font-weight: 500;
+            font-weight: 600;
             transition: all 0.3s ease;
         }
 
@@ -447,22 +448,22 @@
 
         .nfc-detector {
             width: 100%;
-            height: 380px;
+            height: 500px;
             background: white;
-            border-radius: 20px;
+            border-radius: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 20px;
             position: relative;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
             overflow: hidden;
         }
 
         .nfc-waves {
-            width: 130px;
-            height: 130px;
-            border: 3px solid #f5576c;
+            width: 160px;
+            height: 160px;
+            border: 4px solid #f5576c;
             border-radius: 50%;
             position: relative;
             display: flex;
@@ -475,20 +476,20 @@
         .nfc-waves::after {
             content: '';
             position: absolute;
-            border: 2px solid #f5576c;
+            border: 3px solid #f5576c;
             border-radius: 50%;
         }
 
         .nfc-waves::before {
-            width: 180px;
-            height: 180px;
+            width: 220px;
+            height: 220px;
             animation: pulse 2s ease-in-out infinite;
             opacity: 0.6;
         }
 
         .nfc-waves::after {
-            width: 230px;
-            height: 230px;
+            width: 280px;
+            height: 280px;
             animation: pulse 2s ease-in-out infinite 0.7s;
             opacity: 0.4;
         }
@@ -508,7 +509,7 @@
         }
 
         .nfc-icon-center {
-            font-size: 30px;
+            font-size: 35px;
             color: #f5576c;
             z-index: 1;
         }
@@ -731,8 +732,8 @@
                 <div class="scanner-area" id="scannerArea">
                     <div class="camera-placeholder" id="cameraPlaceholder">
                         <div>📷 Click to start camera scanning</div>
-                        <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">
-                            Camera permission required
+                        <div style="font-size: 16px; margin-top: 10px; opacity: 0.9;">
+                            Extra large scanning area for easy detection
                         </div>
                     </div>
                     <video id="video" autoplay playsinline muted></video>
@@ -1016,7 +1017,7 @@
                 debugLog('Starting camera...', { facingMode: currentFacingMode });
                 
                 if (startBtn) startBtn.disabled = true;
-                placeholder.innerHTML = '<div>📷 Requesting camera access...</div><div style="font-size: 12px; margin-top: 5px;">Please allow permissions</div>';
+                placeholder.innerHTML = '<div>📷 Requesting camera access...</div><div style="font-size: 16px; margin-top: 10px;">Please allow permissions</div>';
                 status.textContent = 'Starting camera...';
                 status.className = 'scanner-status';
                 
@@ -1128,7 +1129,7 @@
             }
             if (placeholder) {
                 placeholder.style.display = 'block';
-                placeholder.innerHTML = '<div>📷 Click to start camera scanning</div><div style="font-size: 12px; margin-top: 5px;">Camera permission required</div>';
+                placeholder.innerHTML = '<div>📷 Click to start camera scanning</div><div style="font-size: 16px; margin-top: 10px;">Extra large scanning area for easy detection</div>';
             }
             if (status) {
                 status.textContent = 'Tap the camera area to start scanning';
@@ -1200,12 +1201,12 @@
                     });
                 }
                 
-                // Strategy 4: Center region focus (for better detection)
+                // Strategy 4: Center region focus (optimized for massive 400x400 frame)
                 if (!code && scanAttempts % 3 === 0) {
-                    const centerX = Math.floor(canvas.width * 0.25);
-                    const centerY = Math.floor(canvas.height * 0.25);
-                    const centerWidth = Math.floor(canvas.width * 0.5);
-                    const centerHeight = Math.floor(canvas.height * 0.5);
+                    const centerX = Math.floor(canvas.width * 0.1);
+                    const centerY = Math.floor(canvas.height * 0.1);
+                    const centerWidth = Math.floor(canvas.width * 0.8);
+                    const centerHeight = Math.floor(canvas.height * 0.8);
                     
                     const centerImageData = ctx.getImageData(centerX, centerY, centerWidth, centerHeight);
                     code = jsQR(centerImageData.data, centerImageData.width, centerImageData.height, {
@@ -1410,7 +1411,7 @@ Backend URL: ${CONFIG.API_BASE_URL}`;
             const placeholder = document.getElementById('cameraPlaceholder');
             const status = document.getElementById('scannerStatus');
             
-            placeholder.innerHTML = '<div>📷 Camera not available</div><div style="font-size: 12px; margin-top: 5px;">Click to retry</div>';
+            placeholder.innerHTML = '<div>📷 Camera not available</div><div style="font-size: 16px; margin-top: 10px;">Click to retry</div>';
             placeholder.style.display = 'block';
             status.textContent = '📷 Camera access failed - Try again';
             status.className = 'scanner-status error';
