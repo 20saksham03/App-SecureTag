@@ -251,52 +251,65 @@
         }
 
         .scanner-content {
-            padding: 20px 25px; /* Reduced top padding to accommodate larger scanner */
+            padding: 20px 25px;
             display: flex;
             flex-direction: column;
             height: calc(100% - 80px);
         }
 
-        /* FIXED: Scanner area with proper black background - INCREASED SIZE */
         .scanner-area {
             width: 100%;
-            height: 380px; /* Increased from 280px to 380px */
-            background: #000; /* Ensure black background */
+            height: 380px;
+            background: #000;
             border-radius: 20px;
-            margin-bottom: 20px; /* Reduced margin to fit larger scanner */
+            margin-bottom: 20px;
             position: relative;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-            display: flex; /* Use flexbox to center content */
+            display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        /* FIXED: Camera placeholder styling */
+        .scanner-area:hover {
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+        }
+
+        .scanner-area.scanning {
+            border: 3px solid #4CAF50;
+        }
+
         .camera-placeholder {
             position: absolute;
             color: white;
             text-align: center;
-            font-size: 14px;
-            z-index: 2; /* Above video but below overlay */
+            font-size: 16px;
+            z-index: 2;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+            background: rgba(0, 0, 0, 0.8);
             border-radius: 10px;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        /* FIXED: Video element with proper sizing and no gaps */
+        .camera-placeholder:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.05);
+        }
+
         #video {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Ensures video covers entire area */
+            object-fit: cover;
             border-radius: 20px;
             z-index: 1;
-            display: none; /* Hidden by default */
-            background: #000; /* Black background to prevent any white showing through */
+            display: none;
+            background: #000;
         }
 
         .camera-overlay {
@@ -309,12 +322,12 @@
             align-items: center;
             justify-content: center;
             pointer-events: none;
-            z-index: 3; /* Above everything else */
+            z-index: 3;
         }
 
         .scanner-frame {
-            width: 280px; /* Increased from 220px */
-            height: 280px; /* Increased from 220px */
+            width: 280px;
+            height: 280px;
             position: relative;
             border: 3px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
@@ -323,8 +336,8 @@
 
         .scanner-corners {
             position: absolute;
-            width: 30px; /* Increased from 25px */
-            height: 30px; /* Increased from 25px */
+            width: 30px;
+            height: 30px;
             border: 4px solid #667eea;
             border-radius: 3px;
         }
@@ -372,7 +385,7 @@
 
         @keyframes scan {
             0%, 10% { transform: translateY(0); opacity: 1; }
-            90%, 100% { transform: translateY(272px); opacity: 1; } /* Adjusted for larger frame */
+            90%, 100% { transform: translateY(272px); opacity: 1; }
         }
 
         .scanner-status {
@@ -381,6 +394,15 @@
             color: #2c3e50;
             margin-bottom: 20px;
             font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .scanner-status.success {
+            color: #4CAF50;
+        }
+
+        .scanner-status.error {
+            color: #e74c3c;
         }
 
         .scanner-instructions {
@@ -425,13 +447,13 @@
 
         .nfc-detector {
             width: 100%;
-            height: 380px; /* Increased to match QR scanner height */
+            height: 380px;
             background: white;
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px; /* Reduced margin */
+            margin-bottom: 20px;
             position: relative;
             box-shadow: 0 8px 25px rgba(0,0,0,0.08);
             overflow: hidden;
@@ -576,6 +598,52 @@
             font-size: 14px;
         }
 
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .camera-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            flex: 1;
+            max-width: 120px;
+        }
+
+        .camera-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .camera-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .debug-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+            display: none;
+        }
+
+        .debug-info.show {
+            display: block;
+        }
+
         /* Desktop specific styles */
         @media (min-width: 768px) {
             .camera-placeholder {
@@ -594,31 +662,15 @@
             }
         }
 
-        .camera-controls {
-            display: none;
-            margin-top: 15px;
-            text-align: center;
+        /* Flash effect for successful scan */
+        @keyframes flash {
+            0% { background: #000; }
+            50% { background: #4CAF50; }
+            100% { background: #000; }
         }
 
-        .camera-button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            margin: 0 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-
-        .camera-button:hover {
-            background: #5a6fd8;
-        }
-
-        .camera-button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
+        .scanner-area.flash {
+            animation: flash 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -676,9 +728,12 @@
                     💡 Desktop detected: Camera may work better in mobile browsers
                 </div>
 
-                <div class="scanner-area">
+                <div class="scanner-area" id="scannerArea">
                     <div class="camera-placeholder" id="cameraPlaceholder">
-                        Click to start camera scanning
+                        <div>📷 Click to start camera scanning</div>
+                        <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">
+                            Camera permission required
+                        </div>
                     </div>
                     <video id="video" autoplay playsinline muted></video>
                     <div class="camera-overlay">
@@ -694,7 +749,8 @@
 
                 <div class="camera-controls" id="cameraControls">
                     <button class="camera-button" onclick="startCamera()" id="startBtn">Start Camera</button>
-                    <button class="camera-button" onclick="stopCamera()" id="stopBtn" disabled>Stop Camera</button>
+                    <button class="camera-button" onclick="stopCamera()" id="stopBtn" disabled>Stop</button>
+                    <button class="camera-button" onclick="switchCamera()" id="switchBtn" disabled>Switch</button>
                 </div>
                 
                 <div class="scanner-status" id="scannerStatus">Tap the camera area to start scanning</div>
@@ -712,6 +768,11 @@
                         <div class="instruction-number">3</div>
                         <span>Position QR code within the frame</span>
                     </div>
+                </div>
+
+                <div class="debug-info" id="debugInfo">
+                    <div>🔧 Debug Info:</div>
+                    <div id="debugContent"></div>
                 </div>
 
                 <div class="loading-indicator" id="qrLoading">
@@ -776,18 +837,48 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
-    <script src="config.js"></script>
     <script>
         let videoStream = null;
         let scanning = false;
         let scanningInterval = null;
         let currentFacingMode = 'environment';
         let availableCameras = [];
+        let scanAttempts = 0;
+        let debugMode = false;
         
-        // Backend API configuration - NOW USING CONFIG.JS
-        const API_BASE_URL = CONFIG.API_BASE_URL;
+        // Enhanced API configuration with auto-detection
+        const CONFIG = {
+            API_BASE_URL: window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000/api'
+                : 'https://securetag.onrender.com/api', // Update with your actual Render URL
+            
+            APP_NAME: 'SecureTag',
+            VERSION: '1.0.0',
+            
+            TEST_QR_CODES: {
+                verified: ['VERIFIED001', 'VERIFIED002'],
+                invalid: ['INVALID001']
+            }
+        };
         
-        console.log('🔧 Using API URL:', API_BASE_URL);
+        console.log('🔧 SecureTag Config loaded:', {
+            environment: window.location.hostname === 'localhost' ? 'development' : 'production',
+            apiUrl: CONFIG.API_BASE_URL,
+            platform: 'Render Enhanced'
+        });
+
+        // Enhanced debugging
+        function debugLog(message, data = null) {
+            console.log(`[SecureTag] ${message}`, data || '');
+            if (debugMode) {
+                const debugContent = document.getElementById('debugContent');
+                if (debugContent) {
+                    const time = new Date().toLocaleTimeString();
+                    debugContent.innerHTML += `<div>${time}: ${message}</div>`;
+                    if (data) debugContent.innerHTML += `<div style="margin-left: 10px;">${JSON.stringify(data)}</div>`;
+                }
+            }
+        }
 
         // Update time
         function updateTime() {
@@ -805,26 +896,68 @@
             return window.innerWidth >= 768 && !('ontouchstart' in window);
         }
 
-        // Initialize app
-        function initApp() {
+        // Initialize app with enhanced diagnostics
+        async function initApp() {
+            debugLog('Initializing SecureTag app...');
             updateTime();
             setInterval(updateTime, 60000);
             
             if (isDesktop()) {
                 document.getElementById('desktopNote').style.display = 'block';
-                document.getElementById('cameraControls').style.display = 'block';
+                document.getElementById('cameraControls').style.display = 'flex';
             }
             
-            getCameraDevices();
+            // Test backend connection immediately
+            await testBackendConnection();
+            
+            await getCameraDevices();
+            
+            // Enable debug mode with double-click on title
+            document.querySelector('.app-title').addEventListener('dblclick', toggleDebugMode);
+            
+            debugLog('App initialization complete');
+        }
+
+        // Test backend connection
+        async function testBackendConnection() {
+            try {
+                debugLog('Testing backend connection...', CONFIG.API_BASE_URL);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/health`);
+                const data = await response.json();
+                debugLog('Backend connection successful', data);
+                
+                // Show connection status briefly
+                if (data.status === 'healthy') {
+                    console.log('✅ Backend connected:', data.message);
+                }
+            } catch (error) {
+                debugLog('Backend connection failed', error.message);
+                console.error('❌ Backend connection failed:', error);
+            }
+        }
+
+        function toggleDebugMode() {
+            debugMode = !debugMode;
+            const debugInfo = document.getElementById('debugInfo');
+            if (debugMode) {
+                debugInfo.classList.add('show');
+                debugLog('Debug mode enabled');
+            } else {
+                debugInfo.classList.remove('show');
+            }
         }
 
         async function getCameraDevices() {
             try {
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 availableCameras = devices.filter(device => device.kind === 'videoinput');
-                console.log('Available cameras:', availableCameras.length);
+                debugLog('Available cameras found', availableCameras.length);
+                
+                if (availableCameras.length > 1) {
+                    document.getElementById('switchBtn').style.display = 'block';
+                }
             } catch (error) {
-                console.error('Error getting camera devices:', error);
+                debugLog('Error getting camera devices', error.message);
             }
         }
 
@@ -837,20 +970,20 @@
         }
 
         function showQRScanner() {
+            debugLog('Opening QR Scanner');
             document.getElementById('mainView').style.display = 'none';
             document.getElementById('qrView').style.display = 'block';
             document.getElementById('nfcView').style.display = 'none';
             
-            // Add click to start camera
-            const scannerArea = document.querySelector('.scanner-area');
-            scannerArea.style.cursor = 'pointer';
+            // Enhanced click handler for scanner area
+            const scannerArea = document.getElementById('scannerArea');
             scannerArea.onclick = startCamera;
             
             if (!isDesktop()) {
-                // Try to auto-start on mobile
+                // Try to auto-start on mobile after a brief delay
                 setTimeout(() => {
                     startCamera();
-                }, 500);
+                }, 800);
             }
         }
 
@@ -869,84 +1002,111 @@
             }, 5000);
         }
 
+        // Enhanced camera start with better error handling
         async function startCamera() {
             const video = document.getElementById('video');
             const placeholder = document.getElementById('cameraPlaceholder');
             const startBtn = document.getElementById('startBtn');
             const stopBtn = document.getElementById('stopBtn');
+            const switchBtn = document.getElementById('switchBtn');
             const status = document.getElementById('scannerStatus');
+            const scannerArea = document.getElementById('scannerArea');
             
             try {
+                debugLog('Starting camera...', { facingMode: currentFacingMode });
+                
                 if (startBtn) startBtn.disabled = true;
-                placeholder.textContent = 'Requesting camera access...';
+                placeholder.innerHTML = '<div>📷 Requesting camera access...</div><div style="font-size: 12px; margin-top: 5px;">Please allow permissions</div>';
                 status.textContent = 'Starting camera...';
+                status.className = 'scanner-status';
                 
                 // Stop any existing stream
                 if (videoStream) {
                     videoStream.getTracks().forEach(track => track.stop());
                 }
                 
-                // Try different camera constraints for better compatibility
+                // Enhanced camera constraints for better QR detection
                 const constraints = {
                     video: {
                         facingMode: currentFacingMode,
                         width: { ideal: 1920, min: 640 },
-                        height: { ideal: 1080, min: 480 }
+                        height: { ideal: 1080, min: 480 },
+                        frameRate: { ideal: 30, min: 15 },
+                        focusMode: "continuous",
+                        zoom: 1.0
                     },
                     audio: false
                 };
                 
-                console.log('📷 Requesting camera with constraints:', constraints);
+                debugLog('Camera constraints', constraints);
                 
                 // Request camera access
                 videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = videoStream;
                 
-                // Log camera capabilities
+                // Enhanced track info logging
                 const track = videoStream.getVideoTracks()[0];
                 const settings = track.getSettings();
-                console.log('📷 Camera settings:', settings);
+                debugLog('Camera settings', settings);
                 
-                // Wait for video to be ready
-                video.onloadedmetadata = () => {
-                    video.play().then(() => {
-                        // Hide placeholder and show video
-                        placeholder.style.display = 'none';
-                        video.style.display = 'block';
-                        
-                        status.textContent = 'Position QR code within the scanner frame';
-                        status.style.color = '#2c3e50';
-                        
-                        // Update button states
-                        if (startBtn) startBtn.disabled = true;
-                        if (stopBtn) stopBtn.disabled = false;
-                        
-                        // Start scanning after a brief delay to ensure video is stable
-                        setTimeout(() => {
-                            startQRScanning();
-                        }, 500);
-                        
-                        console.log('✅ Camera started successfully');
-                        console.log('📐 Video dimensions:', video.videoWidth, 'x', video.videoHeight);
-                    }).catch(error => {
-                        console.error('Error playing video:', error);
-                        showCameraError(error.message);
-                    });
-                };
+                // Wait for video to be ready with timeout
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Video load timeout')), 10000);
+                    
+                    video.onloadedmetadata = () => {
+                        clearTimeout(timeout);
+                        video.play().then(() => {
+                            // Enhanced UI feedback
+                            placeholder.style.display = 'none';
+                            video.style.display = 'block';
+                            scannerArea.classList.add('scanning');
+                            
+                            status.textContent = '🎯 Position QR code within the scanner frame';
+                            status.className = 'scanner-status success';
+                            
+                            // Update button states
+                            if (startBtn) startBtn.disabled = true;
+                            if (stopBtn) stopBtn.disabled = false;
+                            if (switchBtn && availableCameras.length > 1) switchBtn.disabled = false;
+                            
+                            // Start scanning with enhanced detection
+                            setTimeout(() => {
+                                startEnhancedQRScanning();
+                            }, 1000);
+                            
+                            debugLog('Camera started successfully', {
+                                width: video.videoWidth,
+                                height: video.videoHeight,
+                                facingMode: currentFacingMode
+                            });
+                            
+                            resolve();
+                        }).catch(reject);
+                    };
+                    
+                    video.onerror = () => {
+                        clearTimeout(timeout);
+                        reject(new Error('Video playback failed'));
+                    };
+                });
                 
             } catch (error) {
-                console.error('Camera error:', error);
+                debugLog('Camera start failed', error.message);
                 showCameraError(error.message);
                 if (startBtn) startBtn.disabled = false;
+                scannerArea.classList.remove('scanning');
             }
         }
 
         function stopCamera() {
+            debugLog('Stopping camera');
             const video = document.getElementById('video');
             const placeholder = document.getElementById('cameraPlaceholder');
             const startBtn = document.getElementById('startBtn');
             const stopBtn = document.getElementById('stopBtn');
+            const switchBtn = document.getElementById('switchBtn');
             const status = document.getElementById('scannerStatus');
+            const scannerArea = document.getElementById('scannerArea');
             
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
@@ -959,6 +1119,7 @@
             }
             
             scanning = false;
+            scanAttempts = 0;
             
             // Reset UI
             if (video) {
@@ -967,27 +1128,49 @@
             }
             if (placeholder) {
                 placeholder.style.display = 'block';
-                placeholder.textContent = 'Click to start camera scanning';
+                placeholder.innerHTML = '<div>📷 Click to start camera scanning</div><div style="font-size: 12px; margin-top: 5px;">Camera permission required</div>';
             }
-            if (status) status.textContent = 'Tap the camera area to start scanning';
+            if (status) {
+                status.textContent = 'Tap the camera area to start scanning';
+                status.className = 'scanner-status';
+            }
+            
+            scannerArea.classList.remove('scanning');
             
             // Update button states
             if (startBtn) startBtn.disabled = false;
             if (stopBtn) stopBtn.disabled = true;
+            if (switchBtn) switchBtn.disabled = true;
         }
 
-        function startQRScanning() {
+        function switchCamera() {
+            if (availableCameras.length < 2) return;
+            
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            debugLog('Switching camera', { newFacingMode: currentFacingMode });
+            
+            if (videoStream) {
+                stopCamera();
+                setTimeout(() => startCamera(), 500);
+            }
+        }
+
+        // Enhanced QR scanning with multiple detection strategies
+        function startEnhancedQRScanning() {
             const video = document.getElementById('video');
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
             scanning = true;
-            console.log('🔍 QR Scanning started...');
+            scanAttempts = 0;
+            debugLog('Enhanced QR scanning started');
             
             scanningInterval = setInterval(() => {
                 if (!scanning || video.readyState !== video.HAVE_ENOUGH_DATA) {
                     return;
                 }
+                
+                scanAttempts++;
                 
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
@@ -995,55 +1178,81 @@
                 
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 
-                // Try multiple scan attempts with different parameters
-                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                // Enhanced multi-strategy detection
+                let code = null;
+                
+                // Strategy 1: Normal detection
+                code = jsQR(imageData.data, imageData.width, imageData.height, {
                     inversionAttempts: "dontInvert"
                 });
                 
+                // Strategy 2: Inverted detection
+                if (!code) {
+                    code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: "onlyInvert"
+                    });
+                }
+                
+                // Strategy 3: Both attempts
+                if (!code) {
+                    code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: "attemptBoth"
+                    });
+                }
+                
+                // Strategy 4: Center region focus (for better detection)
+                if (!code && scanAttempts % 3 === 0) {
+                    const centerX = Math.floor(canvas.width * 0.25);
+                    const centerY = Math.floor(canvas.height * 0.25);
+                    const centerWidth = Math.floor(canvas.width * 0.5);
+                    const centerHeight = Math.floor(canvas.height * 0.5);
+                    
+                    const centerImageData = ctx.getImageData(centerX, centerY, centerWidth, centerHeight);
+                    code = jsQR(centerImageData.data, centerImageData.width, centerImageData.height, {
+                        inversionAttempts: "attemptBoth"
+                    });
+                }
+                
                 if (code) {
-                    console.log('✅ QR Code detected:', code.data);
+                    debugLog('QR Code detected', { 
+                        data: code.data, 
+                        attempts: scanAttempts,
+                        location: code.location 
+                    });
+                    
                     scanning = false;
                     clearInterval(scanningInterval);
                     
-                    // Play a sound or vibrate if available
+                    // Enhanced feedback
+                    const scannerArea = document.getElementById('scannerArea');
+                    scannerArea.classList.add('flash');
+                    setTimeout(() => scannerArea.classList.remove('flash'), 300);
+                    
                     if (navigator.vibrate) {
-                        navigator.vibrate(200);
+                        navigator.vibrate([200, 100, 200]);
                     }
                     
-                    // Show the raw QR data immediately for testing
+                    // Show immediate detection feedback
                     showQRDetectedResult(code.data);
                     
-                    // Then verify with backend
+                    // Verify with backend
                     verifyQRCodeWithBackend(code.data);
-                } else {
-                    // Try with inversion
-                    const codeInverted = jsQR(imageData.data, imageData.width, imageData.height, {
-                        inversionAttempts: "onlyInvert"
-                    });
-                    
-                    if (codeInverted) {
-                        console.log('✅ QR Code detected (inverted):', codeInverted.data);
-                        scanning = false;
-                        clearInterval(scanningInterval);
-                        
-                        if (navigator.vibrate) {
-                            navigator.vibrate(200);
-                        }
-                        
-                        showQRDetectedResult(codeInverted.data);
-                        verifyQRCodeWithBackend(codeInverted.data);
-                    }
                 }
-            }, 100);
+                
+                // Update status every 30 attempts (about 3 seconds)
+                if (scanAttempts % 30 === 0) {
+                    const status = document.getElementById('scannerStatus');
+                    status.textContent = '🔍 Scanning... Hold steady and ensure good lighting';
+                }
+            }, 100); // 10 FPS for better performance
         }
 
-        // New function to show immediate detection feedback
+        // Enhanced QR detection result display
         function showQRDetectedResult(qrData) {
             const status = document.getElementById('scannerStatus');
-            status.textContent = '✅ QR Code detected! Verifying...';
-            status.style.color = '#4CAF50';
+            status.textContent = '✅ QR Code detected! Verifying with backend...';
+            status.className = 'scanner-status success';
             
-            // Show a temporary result while verifying
             const resultDiv = document.getElementById('qrResult');
             const resultText = document.getElementById('qrResultText');
             const resultIcon = document.querySelector('#qrResult .result-icon');
@@ -1053,18 +1262,19 @@
             resultIcon.textContent = '🔍';
             resultIcon.style.background = '#667eea';
             resultTitle.textContent = 'QR Code Detected';
-            resultText.textContent = `Scanned Data: ${qrData}\n\nVerifying with backend...`;
+            resultText.textContent = `📱 Scanned Data: ${qrData}\n\n🔄 Verifying with secure backend...\n⏳ Please wait...`;
             resultDiv.style.display = 'block';
         }
 
+        // Enhanced backend verification
         async function verifyQRCodeWithBackend(qrCode) {
             const loadingDiv = document.getElementById('qrLoading');
             loadingDiv.style.display = 'block';
             
             try {
-                console.log('📡 Verifying QR code with backend:', qrCode);
+                debugLog('Verifying QR code with backend', { qrCode, url: CONFIG.API_BASE_URL });
                 
-                const response = await fetch(`${API_BASE_URL}/verify-qr`, {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/verify-qr`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1073,7 +1283,7 @@
                 });
 
                 const result = await response.json();
-                console.log('📡 Backend response:', result);
+                debugLog('Backend verification response', result);
                 
                 loadingDiv.style.display = 'none';
                 
@@ -1084,11 +1294,9 @@
                 }
                 
             } catch (error) {
-                console.error('❌ Error verifying QR code:', error);
+                debugLog('Backend verification failed', error.message);
                 loadingDiv.style.display = 'none';
-                
-                // For testing, show the QR content even if backend fails
-                showOfflineResult(qrCode);
+                showOfflineResult(qrCode, error.message);
             }
         }
 
@@ -1097,23 +1305,30 @@
             const resultText = document.getElementById('qrResultText');
             const resultIcon = document.querySelector('#qrResult .result-icon');
             const resultTitle = document.querySelector('#qrResult .result-title');
+            const status = document.getElementById('scannerStatus');
             
-            // Set verified styling
+            // Enhanced verified styling
             resultDiv.style.borderLeftColor = '#4CAF50';
-            resultIcon.textContent = '✓';
+            resultIcon.textContent = '✅';
             resultIcon.style.background = '#4CAF50';
-            resultTitle.textContent = 'QR Code VERIFIED ✓';
+            resultTitle.textContent = '🛡️ QR Code VERIFIED';
+            status.textContent = '✅ Verification successful!';
+            status.className = 'scanner-status success';
             
-            // Format the verified data
+            // Enhanced data formatting
             const data = result.data;
-            const formattedText = `Name: ${data.name}
-Department: ${data.department}
-Access Level: ${data.accessLevel}
-Valid Until: ${new Date(data.validUntil).toLocaleDateString()}
-Verified At: ${new Date(data.verifiedAt).toLocaleString()}
+            const formattedText = `🎯 VERIFICATION SUCCESSFUL
 
-QR Code: ${result.qrCode}
-Secure Token: ${data.secureToken.substring(0, 16)}...`;
+👤 Name: ${data.name}
+🏢 Department: ${data.department}
+🔐 Access Level: ${data.accessLevel}
+📅 Valid Until: ${new Date(data.validUntil).toLocaleDateString()}
+⏰ Verified At: ${new Date(data.verifiedAt).toLocaleString()}
+
+📱 QR Code: ${result.qrCode}
+🔒 Security Token: ${data.secureToken.substring(0, 16)}...
+
+✅ This person is authorized for access.`;
             
             resultText.textContent = formattedText;
             resultDiv.style.display = 'block';
@@ -1127,19 +1342,25 @@ Secure Token: ${data.secureToken.substring(0, 16)}...`;
             const resultText = document.getElementById('qrResultText');
             const resultIcon = document.querySelector('#qrResult .result-icon');
             const resultTitle = document.querySelector('#qrResult .result-title');
+            const status = document.getElementById('scannerStatus');
             
-            // Set not verified styling
+            // Enhanced not verified styling
             resultDiv.style.borderLeftColor = '#e74c3c';
-            resultIcon.textContent = '✕';
+            resultIcon.textContent = '❌';
             resultIcon.style.background = '#e74c3c';
-            resultTitle.textContent = 'QR Code NOT VERIFIED ✕';
+            resultTitle.textContent = '🚫 QR Code NOT VERIFIED';
+            status.textContent = '❌ Verification failed!';
+            status.className = 'scanner-status error';
             
-            const formattedText = `Status: ${result.message}
-Reason: ${result.description}
+            const formattedText = `⚠️ VERIFICATION FAILED
 
-Scanned QR Code: ${result.qrCode}
+❌ Status: ${result.message}
+📋 Reason: ${result.description}
 
-This QR code is not authorized in our system.`;
+📱 Scanned QR Code: ${result.qrCode}
+
+🚫 This QR code is not authorized in our system.
+🔒 Please contact security for assistance.`;
             
             resultText.textContent = formattedText;
             resultDiv.style.display = 'block';
@@ -1148,23 +1369,32 @@ This QR code is not authorized in our system.`;
             document.querySelector('.scan-line').style.animation = 'none';
         }
 
-        function showOfflineResult(qrCode) {
+        function showOfflineResult(qrCode, errorMessage) {
             const resultDiv = document.getElementById('qrResult');
             const resultText = document.getElementById('qrResultText');
             const resultIcon = document.querySelector('#qrResult .result-icon');
             const resultTitle = document.querySelector('#qrResult .result-title');
+            const status = document.getElementById('scannerStatus');
             
-            // Set offline styling
+            // Enhanced offline styling
             resultDiv.style.borderLeftColor = '#f39c12';
-            resultIcon.textContent = '⚠';
+            resultIcon.textContent = '⚠️';
             resultIcon.style.background = '#f39c12';
-            resultTitle.textContent = 'Verification Failed';
+            resultTitle.textContent = '🌐 Connection Issue';
+            status.textContent = '⚠️ Backend connection failed';
+            status.className = 'scanner-status error';
             
-            resultText.textContent = `Unable to verify QR code - Backend connection failed.
+            resultText.textContent = `🌐 VERIFICATION UNAVAILABLE
 
-Scanned QR Code: ${qrCode}
+❌ Backend Connection Failed
+📡 Error: ${errorMessage}
 
-Please check your internet connection and try again.`;
+📱 Scanned QR Code: ${qrCode}
+
+🔄 Please check your internet connection and try again.
+💡 The QR code was detected successfully, but verification requires an internet connection.
+
+Backend URL: ${CONFIG.API_BASE_URL}`;
             
             resultDiv.style.display = 'block';
             
@@ -1180,20 +1410,29 @@ Please check your internet connection and try again.`;
             const placeholder = document.getElementById('cameraPlaceholder');
             const status = document.getElementById('scannerStatus');
             
-            placeholder.textContent = 'Camera not available - Click to retry';
+            placeholder.innerHTML = '<div>📷 Camera not available</div><div style="font-size: 12px; margin-top: 5px;">Click to retry</div>';
             placeholder.style.display = 'block';
-            status.textContent = 'Camera access failed - Try again';
+            status.textContent = '📷 Camera access failed - Try again';
+            status.className = 'scanner-status error';
             
-            resultIcon.textContent = '⚠';
+            resultIcon.textContent = '⚠️';
             resultIcon.style.background = '#e74c3c';
             resultTitle.textContent = 'Camera Error';
-            resultText.textContent = `Camera access failed: ${errorMessage}
+            resultText.textContent = `📷 CAMERA ACCESS FAILED
 
-Tips to fix:
+❌ Error: ${errorMessage}
+
+💡 Tips to fix:
 1. Allow camera permissions when prompted
-2. Refresh the page and try again
+2. Refresh the page and try again  
 3. Check if another app is using the camera
-4. Try using HTTPS instead of HTTP`;
+4. Try using HTTPS instead of HTTP
+5. Try a different browser (Chrome recommended)
+
+🔧 Technical Details:
+- Browser: ${navigator.userAgent.split(' ')[0]}
+- HTTPS: ${location.protocol === 'https:' ? 'Yes' : 'No'}
+- Platform: ${navigator.platform}`;
             
             resultDiv.style.display = 'block';
             resultDiv.style.borderLeftColor = '#e74c3c';
@@ -1205,13 +1444,19 @@ Tips to fix:
             const resultText = document.getElementById('nfcResultText');
             
             loadingDiv.style.display = 'none';
-            resultText.textContent = `Tag ID: 04:A3:B2:C1:D4:E5:F6
-Type: NTAG213
-Content: Employee Access Card
-Department: Security
-Name: Sarah Wilson
-Access Level: Level 2
-Valid Until: ${new Date('2024-12-31').toLocaleDateString()}`;
+            resultText.textContent = `📡 NFC TAG DETECTED
+
+🏷️ Tag ID: 04:A3:B2:C1:D4:E5:F6
+📋 Type: NTAG213
+📝 Content Type: Employee Access Card
+
+👤 Name: Sarah Wilson  
+🏢 Department: Security
+🔐 Access Level: Level 2
+📅 Valid Until: ${new Date('2024-12-31').toLocaleDateString()}
+⏰ Detected At: ${new Date().toLocaleString()}
+
+✅ NFC tag read successfully!`;
             resultDiv.style.display = 'block';
         }
 
@@ -1232,6 +1477,10 @@ Valid Until: ${new Date('2024-12-31').toLocaleDateString()}`;
             
             // Reset scanning animation
             document.querySelector('.scan-line').style.animation = 'scan 2.5s ease-in-out infinite';
+            
+            // Clear debug info
+            const debugContent = document.getElementById('debugContent');
+            if (debugContent) debugContent.innerHTML = '';
         }
 
         // Initialize app when page loads
@@ -1242,8 +1491,16 @@ Valid Until: ${new Date('2024-12-31').toLocaleDateString()}`;
             stopCamera();
         });
 
-        console.log('✅ SecureTag app loaded successfully!');
-        console.log('🔧 Test QR Codes:', CONFIG.TEST_QR_CODES);
+        // Handle visibility change (tab switching)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && scanning) {
+                stopCamera();
+            }
+        });
+
+        console.log('✅ SecureTag Enhanced app loaded successfully!');
+        console.log('🔧 Debug: Double-click title to enable debug mode');
+        console.log('🧪 Test QR Codes:', CONFIG.TEST_QR_CODES);
     </script>
 </body>
 </html>
