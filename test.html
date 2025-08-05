@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <h1>SecureTag Test</h1>
+    <p id="status">Testing...</p>
+    <script>
+        fetch('https://securetag.up.railway.app/api/health')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('status').innerHTML = 
+                    'Backend Status: ' + data.status + '<br>' +
+                    'Message: ' + data.message;
+            })
+            .catch(err => {
+                document.getElementById('status').innerHTML = 'Error: ' + err;
+            });
+    </script>
+</body>
+</html>
