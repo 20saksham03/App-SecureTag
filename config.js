@@ -4,7 +4,7 @@ const CONFIG = {
     // and Railway URL for production
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3000/api'
-        : 'https://securetag.up.railway.app/api', // Your Railway URL
+        : 'https://securetag.onrender.com/api', // Your Railway URL
     
     APP_NAME: 'SecureTag',
     VERSION: '1.0.0',
