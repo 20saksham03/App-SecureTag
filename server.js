@@ -5,6 +5,10 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.get('/healthz', (req, res) => {
+    res.status(200).send('OK');
+});
+
 // Middleware
 app.use(cors({
     origin: '*', // Allow all origins for simplicity
@@ -15,9 +19,6 @@ app.use(express.json());
 // Serve static files
 app.use(express.static('.'));
 
-app.get('/healthz', (req, res) => {
-    res.status(200).send('OK');
-});
 // Your 3 QR codes configuration
 const QR_CODES = {
     'VERIFIED001': {
