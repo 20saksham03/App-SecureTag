@@ -630,33 +630,6 @@
             transform: none;
         }
 
-        /* Manual test button styling */
-        .manual-test-btn {
-            background: #f39c12;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
-            transition: all 0.3s ease;
-            margin: 0 auto;
-            display: inline-block;
-        }
-
-        .manual-test-btn:hover {
-            background: #e67e22;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
-        }
-
-        .manual-test-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
-        }
-
         .debug-info {
             background: #f8f9fa;
             border-radius: 8px;
@@ -753,14 +726,14 @@
             
             <div class="scanner-content">
                 <div class="desktop-note" id="desktopNote" style="display: none;">
-                    💡 Desktop detected: Camera may work better in mobile browsers
+                    💡 Desktop: Allow camera permission when prompted
                 </div>
 
                 <div class="scanner-area" id="scannerArea">
                     <div class="camera-placeholder" id="cameraPlaceholder">
-                        <div>📷 Tap to start ultra-large scanner</div>
+                        <div>📷 Tap to start scanning</div>
                         <div style="font-size: 16px; margin-top: 10px; opacity: 0.9;">
-                            MASSIVE 750px scanning area • Close camera apps first
+                            MASSIVE 750px scanner • Allow camera permission
                         </div>
                     </div>
                     <video id="video" autoplay playsinline muted></video>
@@ -777,13 +750,6 @@
 
                 <div class="scanner-status" id="scannerStatus">Tap the camera area to start scanning</div>
                 
-                <!-- Manual Test Button for easier access -->
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <button onclick="testQRManually()" class="manual-test-btn">
-                        🧪 TEST MANUALLY (Skip Camera)
-                    </button>
-                </div>
-                
                 <div class="scanner-instructions">
                     <div class="instruction-item">
                         <div class="instruction-number">1</div>
@@ -791,19 +757,11 @@
                     </div>
                     <div class="instruction-item">
                         <div class="instruction-number">2</div>
-                        <span>Close other apps using camera if needed</span>
-                    </div>
-                    <div class="instruction-item">
-                        <div class="instruction-number">3</div>
                         <span>Position QR code within the frame</span>
                     </div>
                     <div class="instruction-item">
-                        <div class="instruction-number">💡</div>
-                        <span>Double-tap camera area to switch front/back camera</span>
-                    </div>
-                    <div class="instruction-item" style="border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px;">
-                        <div class="instruction-number">🧪</div>
-                        <span style="cursor: pointer; color: #667eea;" onclick="testQRManually()">Click here to test with manual QR input (for testing)</span>
+                        <div class="instruction-number">3</div>
+                        <span>Hold device steady with good lighting</span>
                     </div>
                 </div>
 
@@ -873,7 +831,7 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+    <script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
     <script>
         let videoStream = null;
         let scanning = false;
@@ -933,17 +891,17 @@
             return window.innerWidth >= 768 && !('ontouchstart' in window);
         }
 
-        // Initialize app with enhanced diagnostics and jsQR check
+        // Simplified initialization
         async function initApp() {
-            debugLog('Initializing SecureTag app...');
+            console.log('🚀 Initializing SecureTag...');
             updateTime();
             setInterval(updateTime, 60000);
             
             // Check if jsQR library loaded
-            console.log('🔍 Checking jsQR library...');
             if (typeof jsQR === 'undefined') {
                 console.error('❌ jsQR library failed to load!');
                 alert('❌ QR Scanner library failed to load. Please refresh the page.');
+                return;
             } else {
                 console.log('✅ jsQR library loaded successfully');
             }
@@ -952,63 +910,28 @@
                 document.getElementById('desktopNote').style.display = 'block';
             }
             
-            // Test backend connection immediately
+            // Test backend connection
             await testBackendConnection();
             
+            // Get available cameras
             await getCameraDevices();
             
             // Enable debug mode with double-click on title
             document.querySelector('.app-title').addEventListener('dblclick', toggleDebugMode);
             
-            debugLog('App initialization complete');
-            
-            // Add a diagnostic button for debugging
-            console.log('🔧 Debug Commands Available:');
-            console.log('- Double-click "SecureTag" title to enable debug mode');
-            console.log('- Type testQRManually() in console to test manually');
-            console.log('- Type checkCameraInfo() in console for camera details');
+            console.log('✅ SecureTag initialization complete');
         }
-
-        // Diagnostic function to check camera info
-        window.checkCameraInfo = function() {
-            const video = document.getElementById('video');
-            const info = {
-                videoElement: !!video,
-                videoSrc: video.srcObject ? 'Has stream' : 'No stream',
-                videoReady: video.readyState,
-                videoSize: `${video.videoWidth}x${video.videoHeight}`,
-                streamActive: videoStream ? 'Active' : 'None',
-                streamTracks: videoStream ? videoStream.getTracks().length : 0,
-                jsQRLoaded: typeof jsQR !== 'undefined',
-                cameraPermission: navigator.permissions ? 'Can check' : 'Cannot check',
-                availableCameras: availableCameras.length,
-                currentFacing: currentFacingMode,
-                scanning: scanning
-            };
-            
-            console.table(info);
-            alert('📊 Camera Info logged to console. Press F12 to see details.');
-            return info;
-        };
-
-        // Make testQRManually available globally for console testing
-        window.testQRManually = testQRManually;
 
         // Test backend connection
         async function testBackendConnection() {
             try {
-                debugLog('Testing backend connection...', CONFIG.API_BASE_URL);
+                console.log('🔗 Testing backend connection...', CONFIG.API_BASE_URL);
                 const response = await fetch(`${CONFIG.API_BASE_URL}/health`);
                 const data = await response.json();
-                debugLog('Backend connection successful', data);
-                
-                // Show connection status briefly
-                if (data.status === 'healthy') {
-                    console.log('✅ Backend connected:', data.message);
-                }
+                console.log('✅ Backend connection successful:', data);
             } catch (error) {
-                debugLog('Backend connection failed', error.message);
-                console.error('❌ Backend connection failed:', error);
+                console.log('❌ Backend connection failed:', error.message);
+                console.error('Backend error details:', error);
             }
         }
 
@@ -1027,17 +950,9 @@
             try {
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 availableCameras = devices.filter(device => device.kind === 'videoinput');
-                debugLog('Available cameras found', availableCameras.length);
-                
-                // Show/hide double-tap instruction based on camera availability
-                const doubleTapInstruction = document.querySelector('.instruction-item:last-child');
-                if (availableCameras.length > 1) {
-                    doubleTapInstruction.style.display = 'flex';
-                } else {
-                    doubleTapInstruction.style.display = 'none';
-                }
+                console.log(`📷 Found ${availableCameras.length} camera(s)`);
             } catch (error) {
-                debugLog('Error getting camera devices', error.message);
+                console.error('Error getting camera devices:', error);
             }
         }
 
@@ -1050,87 +965,20 @@
         }
 
         function showQRScanner() {
-            debugLog('Opening QR Scanner');
+            console.log('📱 Opening QR Scanner');
             document.getElementById('mainView').style.display = 'none';
             document.getElementById('qrView').style.display = 'block';
             document.getElementById('nfcView').style.display = 'none';
             
-            // Enhanced click handler for scanner area
+            // Click handler for scanner area
             const scannerArea = document.getElementById('scannerArea');
             scannerArea.onclick = startCamera;
             
-            // Add double-tap to switch camera (since we removed the button)
-            let tapCount = 0;
-            scannerArea.addEventListener('touchstart', function(e) {
-                tapCount++;
-                if (tapCount === 1) {
-                    setTimeout(() => {
-                        if (tapCount === 1) {
-                            // Single tap - start camera
-                            startCamera();
-                        } else if (tapCount === 2) {
-                            // Double tap - switch camera
-                            switchCamera();
-                        }
-                        tapCount = 0;
-                    }, 300);
-                }
-            });
-            
             if (!isDesktop()) {
-                // Try to auto-start on mobile after a brief delay
+                // Auto-start on mobile after a brief delay
                 setTimeout(() => {
                     startCamera();
                 }, 800);
-            }
-        }
-
-        function switchCamera() {
-            if (availableCameras.length < 2) {
-                debugLog('Only one camera available');
-                return;
-            }
-            
-            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
-            debugLog('Switching camera', { newFacingMode: currentFacingMode });
-            
-            const status = document.getElementById('scannerStatus');
-            status.textContent = '🔄 Switching camera...';
-            status.className = 'scanner-status';
-            
-            if (videoStream) {
-                stopCamera();
-                setTimeout(() => startCamera(), 500);
-            }
-        }
-
-        // Fixed manual QR testing function
-        function testQRManually() {
-            const qrCode = prompt('🧪 MANUAL QR TEST\n\nEnter QR code text to test:\n\n• VERIFIED001 (should show verified)\n• VERIFIED002 (should show verified)\n• INVALID001 (should show invalid)\n• Any other text (will test backend)');
-            
-            if (qrCode && qrCode.trim()) {
-                const trimmedCode = qrCode.trim();
-                debugLog('🧪 Manual QR test started', trimmedCode);
-                
-                // Stop camera if running
-                if (scanning) {
-                    stopCamera();
-                }
-                
-                // Update UI immediately
-                const status = document.getElementById('scannerStatus');
-                status.textContent = '🧪 Testing manually entered QR code...';
-                status.className = 'scanner-status success';
-                
-                // Show immediate detection with manual flag
-                showQRDetectedResult(trimmedCode + ' (Manual Test)');
-                
-                // Test backend verification
-                verifyQRCodeWithBackend(trimmedCode);
-                
-                console.log('✅ Manual test initiated for:', trimmedCode);
-            } else {
-                alert('❌ No QR code entered. Please try again.');
             }
         }
 
@@ -1157,7 +1005,7 @@
             const scannerArea = document.getElementById('scannerArea');
             
             try {
-                debugLog('Starting camera...', { facingMode: currentFacingMode });
+                console.log('📷 Starting camera...');
                 
                 placeholder.innerHTML = '<div>📷 Requesting camera access...</div><div style="font-size: 16px; margin-top: 10px;">Please allow permissions</div>';
                 status.textContent = 'Starting camera...';
@@ -1178,7 +1026,7 @@
                     audio: false
                 };
                 
-                debugLog('Camera constraints', constraints);
+                console.log('📷 Camera constraints:', constraints);
                 
                 // Request camera access with retries
                 let retryCount = 0;
@@ -1190,7 +1038,7 @@
                         break;
                     } catch (error) {
                         retryCount++;
-                        debugLog(`Camera attempt ${retryCount} failed:`, error.message);
+                        console.log(`📷 Camera attempt ${retryCount} failed:`, error.message);
                         
                         if (retryCount === maxRetries) {
                             throw error;
@@ -1213,11 +1061,11 @@
                 // Enhanced track info logging
                 const track = videoStream.getVideoTracks()[0];
                 const settings = track.getSettings();
-                debugLog('Camera settings', settings);
+                console.log('📷 Camera settings:', settings);
                 
                 // Wait for video to be ready with extended timeout and better error handling
                 await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Video load timeout - try closing other apps using camera')), 15000); // Increased to 15s
+                    const timeout = setTimeout(() => reject(new Error('Video load timeout - camera may be in use')), 15000); // 15s timeout
                     
                     const checkVideoReady = () => {
                         if (video.readyState >= 2) { // HAVE_CURRENT_DATA or higher
@@ -1236,7 +1084,7 @@
                                     startEnhancedQRScanning();
                                 }, 1500);
                                 
-                                debugLog('Camera started successfully', {
+                                console.log('✅ Camera started successfully:', {
                                     width: video.videoWidth,
                                     height: video.videoHeight,
                                     facingMode: currentFacingMode,
@@ -1256,7 +1104,7 @@
                     
                     video.onerror = () => {
                         clearTimeout(timeout);
-                        reject(new Error('Video playback failed - camera may be in use by another app'));
+                        reject(new Error('Video playback failed - camera may be in use'));
                     };
                     
                     // Start checking immediately
@@ -1264,7 +1112,7 @@
                 });
                 
             } catch (error) {
-                debugLog('Camera start failed', error.message);
+                console.error('❌ Camera start failed:', error.message);
                 
                 // Enhanced error messages based on error type
                 let errorMessage = error.message;
@@ -1278,13 +1126,10 @@
                     helpText = 'Make sure your device has a camera';
                 } else if (error.name === 'AbortError') {
                     errorMessage = 'Camera access aborted';
-                    helpText = 'Please try again or restart your browser';
+                    helpText = 'Please try again';
                 } else if (error.message.includes('timeout')) {
                     errorMessage = 'Camera initialization timeout';
-                    helpText = 'Close other apps using camera and try again';
-                } else if (error.message.includes('in use')) {
-                    errorMessage = 'Camera is being used by another app';
-                    helpText = 'Close other camera apps and try again';
+                    helpText = 'Camera may be in use by another app';
                 }
                 
                 showEnhancedCameraError(errorMessage, helpText);
@@ -1293,7 +1138,7 @@
         }
 
         function stopCamera() {
-            debugLog('Stopping camera');
+            console.log('🛑 Stopping camera');
             const video = document.getElementById('video');
             const placeholder = document.getElementById('cameraPlaceholder');
             const status = document.getElementById('scannerStatus');
@@ -1319,7 +1164,7 @@
             }
             if (placeholder) {
                 placeholder.style.display = 'block';
-                placeholder.innerHTML = '<div>📷 Tap to start ultra-large scanner</div><div style="font-size: 16px; margin-top: 10px;">MASSIVE 750px scanning area • Close camera apps first</div>';
+                placeholder.innerHTML = '<div>📷 Tap to start scanning</div><div style="font-size: 16px; margin-top: 10px;">MASSIVE 750px scanner • Allow camera permission</div>';
             }
             if (status) {
                 status.textContent = 'Tap the camera area to start scanning';
@@ -1341,7 +1186,7 @@
             }
         }
 
-        // Completely rewritten, more reliable QR scanning engine
+        // Simple, reliable QR scanning engine
         function startEnhancedQRScanning() {
             const video = document.getElementById('video');
             const canvas = document.createElement('canvas');
@@ -1354,17 +1199,16 @@
             if (typeof jsQR === 'undefined') {
                 console.error('❌ jsQR library not loaded!');
                 const status = document.getElementById('scannerStatus');
-                status.textContent = '❌ QR Scanner library failed to load. Refresh page.';
+                status.textContent = '❌ QR Scanner library failed to load. Please refresh page.';
                 status.className = 'scanner-status error';
                 return;
             }
             
-            debugLog('🔍 Enhanced QR scanning engine started');
-            console.log('✅ jsQR library loaded successfully');
+            console.log('✅ QR scanning started');
             
-            // Update status to show scanning is active
+            // Update status
             const status = document.getElementById('scannerStatus');
-            status.textContent = '🔍 QR Scanner ACTIVE - Position QR code in frame';
+            status.textContent = '🔍 Scanning for QR codes...';
             status.className = 'scanner-status success';
             
             scanningInterval = setInterval(() => {
@@ -1378,104 +1222,63 @@
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 
-                // Draw current video frame to canvas
+                // Draw current video frame
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                // Get image data from canvas
+                // Get image data
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                
-                console.log(`🔍 Scan attempt ${scanAttempts}: ${canvas.width}x${canvas.height} pixels`);
                 
                 let code = null;
                 
                 try {
-                    // Try basic QR detection first
+                    // Simple QR detection
                     code = jsQR(imageData.data, imageData.width, imageData.height, {
-                        inversionAttempts: "dontInvert"
+                        inversionAttempts: "attemptBoth"
                     });
                     
-                    if (!code) {
-                        // Try with inversion
-                        code = jsQR(imageData.data, imageData.width, imageData.height, {
-                            inversionAttempts: "onlyInvert"
-                        });
-                    }
-                    
-                    if (!code) {
-                        // Try both inversion attempts
-                        code = jsQR(imageData.data, imageData.width, imageData.height, {
-                            inversionAttempts: "attemptBoth"
-                        });
-                    }
-                    
-                    // Try different regions if still no code found
-                    if (!code && scanAttempts % 5 === 0) {
-                        // Try center region (most common QR location)
-                        const centerX = Math.floor(canvas.width * 0.2);
-                        const centerY = Math.floor(canvas.height * 0.2);
-                        const centerW = Math.floor(canvas.width * 0.6);
-                        const centerH = Math.floor(canvas.height * 0.6);
-                        
-                        const centerData = ctx.getImageData(centerX, centerY, centerW, centerH);
-                        code = jsQR(centerData.data, centerData.width, centerData.height, {
-                            inversionAttempts: "attemptBoth"
-                        });
-                        
-                        console.log(`🎯 Tried center region: ${centerW}x${centerH}`);
-                    }
-                    
                 } catch (error) {
-                    console.error('❌ jsQR scanning error:', error);
-                    debugLog('QR scanning error', error.message);
+                    console.error('QR scanning error:', error);
                 }
                 
                 if (code && code.data) {
-                    console.log('🎉 QR CODE FOUND!', code.data);
-                    debugLog('🎉 QR Code successfully detected!', { 
-                        data: code.data, 
-                        attempts: scanAttempts,
-                        location: code.location,
-                        imageSize: `${canvas.width}x${canvas.height}`
-                    });
+                    console.log('🎉 QR CODE FOUND:', code.data);
                     
                     scanning = false;
                     clearInterval(scanningInterval);
                     
-                    // Strong visual feedback
+                    // Visual feedback
                     const scannerArea = document.getElementById('scannerArea');
                     scannerArea.classList.add('flash');
                     setTimeout(() => scannerArea.classList.remove('flash'), 500);
                     
-                    // Vibration feedback
+                    // Vibration
                     if (navigator.vibrate) {
-                        navigator.vibrate([200, 50, 200, 50, 300]);
+                        navigator.vibrate([200, 100, 200]);
                     }
                     
-                    // Update status immediately
-                    status.textContent = `🎉 QR CODE DETECTED: ${code.data}`;
+                    // Update status
+                    status.textContent = `🎉 QR Code Found: ${code.data}`;
                     status.className = 'scanner-status success';
                     
-                    // Show immediate detection feedback
+                    // Show result
                     showQRDetectedResult(code.data);
                     
                     // Verify with backend
                     verifyQRCodeWithBackend(code.data);
-                    
-                } else {
-                    // Update status every 10 attempts
-                    if (scanAttempts % 10 === 0) {
-                        status.textContent = `🔍 Scanning... ${scanAttempts} attempts (${canvas.width}x${canvas.height}px)`;
-                        console.log(`🔍 Still scanning... ${scanAttempts} attempts, no QR found`);
-                    }
                 }
                 
-            }, 100); // 10 FPS - good balance of speed and performance
+                // Update status every 10 attempts
+                if (scanAttempts % 10 === 0) {
+                    status.textContent = `🔍 Scanning... ${scanAttempts} attempts`;
+                }
+                
+            }, 100); // 10 FPS
         }
 
-        // Enhanced QR detection result display
+        // Simplified QR detection result display
         function showQRDetectedResult(qrData) {
             const status = document.getElementById('scannerStatus');
-            status.textContent = `✅ QR Code detected: "${qrData}" - Verifying...`;
+            status.textContent = `✅ QR Code found: "${qrData}" - Verifying...`;
             status.className = 'scanner-status success';
             
             const resultDiv = document.getElementById('qrResult');
@@ -1486,25 +1289,19 @@
             resultDiv.style.borderLeftColor = '#667eea';
             resultIcon.textContent = '🔍';
             resultIcon.style.background = '#667eea';
-            resultTitle.textContent = '📱 QR Code Successfully Detected';
+            resultTitle.textContent = '📱 QR Code Detected';
             
-            const isManualTest = qrData.includes('(Manual Test)');
-            const cleanData = qrData.replace(' (Manual Test)', '');
-            
-            resultText.textContent = `📱 DETECTION SUCCESS!
+            resultText.textContent = `📱 DETECTED QR CODE
 
-✅ QR Code Data: "${cleanData}"
-🔍 Detection Method: ${isManualTest ? 'Manual Input' : 'Camera Scan'}
-⏰ Detected At: ${new Date().toLocaleString()}
+✅ Data: "${qrData}"
+⏰ Time: ${new Date().toLocaleString()}
 
-🔄 Now verifying with secure backend...
-⏳ Please wait for verification results...
-
-Backend URL: ${CONFIG.API_BASE_URL}`;
+🔄 Verifying with backend...
+⏳ Please wait...`;
             
             resultDiv.style.display = 'block';
             
-            console.log(`✅ QR Detection Result: "${cleanData}"`);
+            console.log(`✅ QR Detected: "${qrData}"`);
         }
 
         // Enhanced backend verification
@@ -1513,7 +1310,7 @@ Backend URL: ${CONFIG.API_BASE_URL}`;
             loadingDiv.style.display = 'block';
             
             try {
-                debugLog('Verifying QR code with backend', { qrCode, url: CONFIG.API_BASE_URL });
+                console.log('🔗 Verifying QR code with backend:', qrCode);
                 
                 const response = await fetch(`${CONFIG.API_BASE_URL}/verify-qr`, {
                     method: 'POST',
@@ -1524,7 +1321,7 @@ Backend URL: ${CONFIG.API_BASE_URL}`;
                 });
 
                 const result = await response.json();
-                debugLog('Backend verification response', result);
+                console.log('📡 Backend response:', result);
                 
                 loadingDiv.style.display = 'none';
                 
@@ -1535,7 +1332,7 @@ Backend URL: ${CONFIG.API_BASE_URL}`;
                 }
                 
             } catch (error) {
-                debugLog('Backend verification failed', error.message);
+                console.error('❌ Error verifying QR code:', error);
                 loadingDiv.style.display = 'none';
                 showOfflineResult(qrCode, error.message);
             }
@@ -1651,7 +1448,7 @@ Backend URL: ${CONFIG.API_BASE_URL}`;
             const placeholder = document.getElementById('cameraPlaceholder');
             const status = document.getElementById('scannerStatus');
             
-            placeholder.innerHTML = '<div>📷 Camera error - Tap to retry</div><div style="font-size: 14px; margin-top: 8px;">Follow the troubleshooting steps below</div>';
+            placeholder.innerHTML = '<div>📷 Camera error - Tap to retry</div><div style="font-size: 14px; margin-top: 8px;">Follow steps below to fix</div>';
             placeholder.style.display = 'block';
             status.textContent = '📷 Camera access failed - Try again';
             status.className = 'scanner-status error';
@@ -1661,43 +1458,32 @@ Backend URL: ${CONFIG.API_BASE_URL}`;
             resultTitle.textContent = 'Camera Error';
             
             const isSecure = location.protocol === 'https:';
-            const browserInfo = navigator.userAgent.includes('Chrome') ? 'Chrome' : 
-                               navigator.userAgent.includes('Firefox') ? 'Firefox' : 
-                               navigator.userAgent.includes('Safari') ? 'Safari' : 'Unknown';
             
             resultText.textContent = `📷 CAMERA ACCESS FAILED
 
 ❌ Error: ${errorMessage}
-💡 Help: ${helpText}
+💡 Solution: ${helpText}
 
-🔧 TROUBLESHOOTING STEPS:
+🔧 HOW TO FIX:
 
-1️⃣ CLOSE OTHER APPS
-   • Close all camera apps (Instagram, Snapchat, etc.)
-   • Close other browser tabs using camera
-   • Restart your browser
-
-2️⃣ CHECK PERMISSIONS
+1️⃣ ALLOW CAMERA PERMISSION
    • Tap the 🔒 lock icon in address bar
    • Set Camera to "Allow"
    • Refresh this page
 
-3️⃣ BROWSER ISSUES
-   • Try Chrome browser (recommended)
-   • Clear browser cache
-   • Restart your phone
+2️⃣ TRY DIFFERENT BROWSER
+   • Use Chrome (recommended)
+   • Use Firefox or Safari
 
-4️⃣ DEVICE ISSUES
-   • Make sure camera isn't physically blocked
-   • Try switching between front/back camera
-   • Restart your device
+3️⃣ DEVICE RESTART
+   • Restart your browser completely
+   • Restart your phone if needed
 
 🌐 TECHNICAL INFO:
    • HTTPS: ${isSecure ? '✅ Yes' : '❌ No (Required!)'}
-   • Browser: ${browserInfo}
-   • Device: ${navigator.platform}
+   • Browser: ${navigator.userAgent.split(' ')[0]}
 
-${!isSecure ? '⚠️ HTTPS is required for camera access on this domain!' : ''}`;
+${!isSecure ? '⚠️ HTTPS is required for camera access!' : ''}`;
             
             resultDiv.style.display = 'block';
             resultDiv.style.borderLeftColor = '#e74c3c';
