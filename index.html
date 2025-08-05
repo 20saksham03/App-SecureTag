@@ -251,7 +251,7 @@
         }
 
         .scanner-content {
-            padding: 20px 25px;
+            padding: 15px 25px;
             display: flex;
             flex-direction: column;
             height: calc(100% - 80px);
@@ -259,10 +259,10 @@
 
         .scanner-area {
             width: 100%;
-            height: 500px;
+            height: 580px;
             background: #000;
             border-radius: 30px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             position: relative;
             overflow: hidden;
             box-shadow: 0 12px 35px rgba(0,0,0,0.15);
@@ -328,7 +328,7 @@
 
         .scanner-frame {
             width: 400px;
-            height: 400px;
+            height: 480px;
             position: relative;
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-radius: 30px;
@@ -386,14 +386,14 @@
 
         @keyframes scan {
             0%, 10% { transform: translateY(0); opacity: 1; }
-            90%, 100% { transform: translateY(392px); opacity: 1; }
+            90%, 100% { transform: translateY(472px); opacity: 1; }
         }
 
         .scanner-status {
             text-align: center;
             font-size: 18px;
             color: #2c3e50;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-weight: 600;
             transition: all 0.3s ease;
         }
@@ -448,21 +448,21 @@
 
         .nfc-detector {
             width: 100%;
-            height: 500px;
+            height: 580px;
             background: white;
             border-radius: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             position: relative;
             box-shadow: 0 12px 35px rgba(0,0,0,0.15);
             overflow: hidden;
         }
 
         .nfc-waves {
-            width: 160px;
-            height: 160px;
+            width: 180px;
+            height: 180px;
             border: 4px solid #f5576c;
             border-radius: 50%;
             position: relative;
@@ -481,15 +481,15 @@
         }
 
         .nfc-waves::before {
-            width: 220px;
-            height: 220px;
+            width: 250px;
+            height: 250px;
             animation: pulse 2s ease-in-out infinite;
             opacity: 0.6;
         }
 
         .nfc-waves::after {
-            width: 280px;
-            height: 280px;
+            width: 320px;
+            height: 320px;
             animation: pulse 2s ease-in-out infinite 0.7s;
             opacity: 0.4;
         }
@@ -509,7 +509,7 @@
         }
 
         .nfc-icon-center {
-            font-size: 35px;
+            font-size: 40px;
             color: #f5576c;
             z-index: 1;
         }
@@ -733,7 +733,7 @@
                     <div class="camera-placeholder" id="cameraPlaceholder">
                         <div>📷 Click to start camera scanning</div>
                         <div style="font-size: 16px; margin-top: 10px; opacity: 0.9;">
-                            Extra large scanning area for easy detection
+                            Extra large tall scanning area for perfect detection
                         </div>
                     </div>
                     <video id="video" autoplay playsinline muted></video>
@@ -1129,7 +1129,7 @@
             }
             if (placeholder) {
                 placeholder.style.display = 'block';
-                placeholder.innerHTML = '<div>📷 Click to start camera scanning</div><div style="font-size: 16px; margin-top: 10px;">Extra large scanning area for easy detection</div>';
+                placeholder.innerHTML = '<div>📷 Click to start camera scanning</div><div style="font-size: 16px; margin-top: 10px;">Extra large tall scanning area for perfect detection</div>';
             }
             if (status) {
                 status.textContent = 'Tap the camera area to start scanning';
@@ -1201,12 +1201,12 @@
                     });
                 }
                 
-                // Strategy 4: Center region focus (optimized for massive 400x400 frame)
+                // Strategy 4: Center region focus (optimized for tall 400x480 frame)
                 if (!code && scanAttempts % 3 === 0) {
                     const centerX = Math.floor(canvas.width * 0.1);
-                    const centerY = Math.floor(canvas.height * 0.1);
+                    const centerY = Math.floor(canvas.height * 0.05);
                     const centerWidth = Math.floor(canvas.width * 0.8);
-                    const centerHeight = Math.floor(canvas.height * 0.8);
+                    const centerHeight = Math.floor(canvas.height * 0.9);
                     
                     const centerImageData = ctx.getImageData(centerX, centerY, centerWidth, centerHeight);
                     code = jsQR(centerImageData.data, centerImageData.width, centerImageData.height, {
