@@ -259,7 +259,7 @@
 
         .scanner-area {
             width: 100%;
-            height: 580px;
+            height: 650px;
             background: #000;
             border-radius: 30px;
             margin-bottom: 15px;
@@ -328,7 +328,7 @@
 
         .scanner-frame {
             width: 400px;
-            height: 480px;
+            height: 550px;
             position: relative;
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-radius: 30px;
@@ -386,7 +386,7 @@
 
         @keyframes scan {
             0%, 10% { transform: translateY(0); opacity: 1; }
-            90%, 100% { transform: translateY(472px); opacity: 1; }
+            90%, 100% { transform: translateY(542px); opacity: 1; }
         }
 
         .scanner-status {
@@ -448,7 +448,7 @@
 
         .nfc-detector {
             width: 100%;
-            height: 580px;
+            height: 650px;
             background: white;
             border-radius: 30px;
             display: flex;
@@ -461,9 +461,9 @@
         }
 
         .nfc-waves {
-            width: 180px;
-            height: 180px;
-            border: 4px solid #f5576c;
+            width: 200px;
+            height: 200px;
+            border: 5px solid #f5576c;
             border-radius: 50%;
             position: relative;
             display: flex;
@@ -476,20 +476,20 @@
         .nfc-waves::after {
             content: '';
             position: absolute;
-            border: 3px solid #f5576c;
+            border: 4px solid #f5576c;
             border-radius: 50%;
         }
 
         .nfc-waves::before {
-            width: 250px;
-            height: 250px;
+            width: 280px;
+            height: 280px;
             animation: pulse 2s ease-in-out infinite;
             opacity: 0.6;
         }
 
         .nfc-waves::after {
-            width: 320px;
-            height: 320px;
+            width: 360px;
+            height: 360px;
             animation: pulse 2s ease-in-out infinite 0.7s;
             opacity: 0.4;
         }
@@ -509,7 +509,7 @@
         }
 
         .nfc-icon-center {
-            font-size: 40px;
+            font-size: 45px;
             color: #f5576c;
             z-index: 1;
         }
@@ -733,7 +733,7 @@
                     <div class="camera-placeholder" id="cameraPlaceholder">
                         <div>📷 Click to start camera scanning</div>
                         <div style="font-size: 16px; margin-top: 10px; opacity: 0.9;">
-                            Extra large tall scanning area for perfect detection
+                            Massive scanning area for perfect detection
                         </div>
                     </div>
                     <video id="video" autoplay playsinline muted></video>
@@ -748,12 +748,6 @@
                     </div>
                 </div>
 
-                <div class="camera-controls" id="cameraControls">
-                    <button class="camera-button" onclick="startCamera()" id="startBtn">Start Camera</button>
-                    <button class="camera-button" onclick="stopCamera()" id="stopBtn" disabled>Stop</button>
-                    <button class="camera-button" onclick="switchCamera()" id="switchBtn" disabled>Switch</button>
-                </div>
-                
                 <div class="scanner-status" id="scannerStatus">Tap the camera area to start scanning</div>
                 
                 <div class="scanner-instructions">
@@ -905,7 +899,6 @@
             
             if (isDesktop()) {
                 document.getElementById('desktopNote').style.display = 'block';
-                document.getElementById('cameraControls').style.display = 'flex';
             }
             
             // Test backend connection immediately
@@ -953,10 +946,6 @@
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 availableCameras = devices.filter(device => device.kind === 'videoinput');
                 debugLog('Available cameras found', availableCameras.length);
-                
-                if (availableCameras.length > 1) {
-                    document.getElementById('switchBtn').style.display = 'block';
-                }
             } catch (error) {
                 debugLog('Error getting camera devices', error.message);
             }
@@ -1007,16 +996,12 @@
         async function startCamera() {
             const video = document.getElementById('video');
             const placeholder = document.getElementById('cameraPlaceholder');
-            const startBtn = document.getElementById('startBtn');
-            const stopBtn = document.getElementById('stopBtn');
-            const switchBtn = document.getElementById('switchBtn');
             const status = document.getElementById('scannerStatus');
             const scannerArea = document.getElementById('scannerArea');
             
             try {
                 debugLog('Starting camera...', { facingMode: currentFacingMode });
                 
-                if (startBtn) startBtn.disabled = true;
                 placeholder.innerHTML = '<div>📷 Requesting camera access...</div><div style="font-size: 16px; margin-top: 10px;">Please allow permissions</div>';
                 status.textContent = 'Starting camera...';
                 status.className = 'scanner-status';
@@ -1065,11 +1050,6 @@
                             status.textContent = '🎯 Position QR code within the scanner frame';
                             status.className = 'scanner-status success';
                             
-                            // Update button states
-                            if (startBtn) startBtn.disabled = true;
-                            if (stopBtn) stopBtn.disabled = false;
-                            if (switchBtn && availableCameras.length > 1) switchBtn.disabled = false;
-                            
                             // Start scanning with enhanced detection
                             setTimeout(() => {
                                 startEnhancedQRScanning();
@@ -1094,7 +1074,6 @@
             } catch (error) {
                 debugLog('Camera start failed', error.message);
                 showCameraError(error.message);
-                if (startBtn) startBtn.disabled = false;
                 scannerArea.classList.remove('scanning');
             }
         }
@@ -1103,9 +1082,6 @@
             debugLog('Stopping camera');
             const video = document.getElementById('video');
             const placeholder = document.getElementById('cameraPlaceholder');
-            const startBtn = document.getElementById('startBtn');
-            const stopBtn = document.getElementById('stopBtn');
-            const switchBtn = document.getElementById('switchBtn');
             const status = document.getElementById('scannerStatus');
             const scannerArea = document.getElementById('scannerArea');
             
@@ -1129,7 +1105,7 @@
             }
             if (placeholder) {
                 placeholder.style.display = 'block';
-                placeholder.innerHTML = '<div>📷 Click to start camera scanning</div><div style="font-size: 16px; margin-top: 10px;">Extra large tall scanning area for perfect detection</div>';
+                placeholder.innerHTML = '<div>📷 Click to start camera scanning</div><div style="font-size: 16px; margin-top: 10px;">Massive scanning area for perfect detection</div>';
             }
             if (status) {
                 status.textContent = 'Tap the camera area to start scanning';
@@ -1137,11 +1113,6 @@
             }
             
             scannerArea.classList.remove('scanning');
-            
-            // Update button states
-            if (startBtn) startBtn.disabled = false;
-            if (stopBtn) stopBtn.disabled = true;
-            if (switchBtn) switchBtn.disabled = true;
         }
 
         function switchCamera() {
@@ -1201,12 +1172,12 @@
                     });
                 }
                 
-                // Strategy 4: Center region focus (optimized for tall 400x480 frame)
+                // Strategy 4: Center region focus (optimized for extra tall 400x550 frame)
                 if (!code && scanAttempts % 3 === 0) {
                     const centerX = Math.floor(canvas.width * 0.1);
-                    const centerY = Math.floor(canvas.height * 0.05);
+                    const centerY = Math.floor(canvas.height * 0.03);
                     const centerWidth = Math.floor(canvas.width * 0.8);
-                    const centerHeight = Math.floor(canvas.height * 0.9);
+                    const centerHeight = Math.floor(canvas.height * 0.94);
                     
                     const centerImageData = ctx.getImageData(centerX, centerY, centerWidth, centerHeight);
                     code = jsQR(centerImageData.data, centerImageData.width, centerImageData.height, {
