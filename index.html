@@ -731,9 +731,9 @@
 
                 <div class="scanner-area" id="scannerArea">
                     <div class="camera-placeholder" id="cameraPlaceholder">
-                        <div>📷 Click to start camera scanning</div>
+                        <div>📷 Tap to start camera scanning</div>
                         <div style="font-size: 16px; margin-top: 10px; opacity: 0.9;">
-                            Massive scanning area for perfect detection
+                            Massive scanning area • Close other camera apps first
                         </div>
                     </div>
                     <video id="video" autoplay playsinline muted></video>
@@ -757,11 +757,15 @@
                     </div>
                     <div class="instruction-item">
                         <div class="instruction-number">2</div>
-                        <span>Hold your device steady with good lighting</span>
+                        <span>Close other apps using camera if needed</span>
                     </div>
                     <div class="instruction-item">
                         <div class="instruction-number">3</div>
                         <span>Position QR code within the frame</span>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-number">💡</div>
+                        <span>Double-tap camera area to switch front/back camera</span>
                     </div>
                 </div>
 
@@ -946,6 +950,14 @@
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 availableCameras = devices.filter(device => device.kind === 'videoinput');
                 debugLog('Available cameras found', availableCameras.length);
+                
+                // Show/hide double-tap instruction based on camera availability
+                const doubleTapInstruction = document.querySelector('.instruction-item:last-child');
+                if (availableCameras.length > 1) {
+                    doubleTapInstruction.style.display = 'flex';
+                } else {
+                    doubleTapInstruction.style.display = 'none';
+                }
             } catch (error) {
                 debugLog('Error getting camera devices', error.message);
             }
@@ -969,11 +981,48 @@
             const scannerArea = document.getElementById('scannerArea');
             scannerArea.onclick = startCamera;
             
+            // Add double-tap to switch camera (since we removed the button)
+            let tapCount = 0;
+            scannerArea.addEventListener('touchstart', function(e) {
+                tapCount++;
+                if (tapCount === 1) {
+                    setTimeout(() => {
+                        if (tapCount === 1) {
+                            // Single tap - start camera
+                            startCamera();
+                        } else if (tapCount === 2) {
+                            // Double tap - switch camera
+                            switchCamera();
+                        }
+                        tapCount = 0;
+                    }, 300);
+                }
+            });
+            
             if (!isDesktop()) {
                 // Try to auto-start on mobile after a brief delay
                 setTimeout(() => {
                     startCamera();
                 }, 800);
+            }
+        }
+
+        function switchCamera() {
+            if (availableCameras.length < 2) {
+                debugLog('Only one camera available');
+                return;
+            }
+            
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            debugLog('Switching camera', { newFacingMode: currentFacingMode });
+            
+            const status = document.getElementById('scannerStatus');
+            status.textContent = '🔄 Switching camera...';
+            status.className = 'scanner-status';
+            
+            if (videoStream) {
+                stopCamera();
+                setTimeout(() => startCamera(), 500);
             }
         }
 
@@ -992,7 +1041,7 @@
             }, 5000);
         }
 
-        // Enhanced camera start with better error handling
+        // Enhanced camera start with better error handling and fallback options
         async function startCamera() {
             const video = document.getElementById('video');
             const placeholder = document.getElementById('cameraPlaceholder');
@@ -1011,23 +1060,46 @@
                     videoStream.getTracks().forEach(track => track.stop());
                 }
                 
-                // Enhanced camera constraints for better QR detection
+                // Enhanced camera constraints with fallback options
                 const constraints = {
                     video: {
                         facingMode: currentFacingMode,
-                        width: { ideal: 1920, min: 640 },
-                        height: { ideal: 1080, min: 480 },
-                        frameRate: { ideal: 30, min: 15 },
-                        focusMode: "continuous",
-                        zoom: 1.0
+                        width: { ideal: 1280, min: 640 },
+                        height: { ideal: 720, min: 480 }
                     },
                     audio: false
                 };
                 
                 debugLog('Camera constraints', constraints);
                 
-                // Request camera access
-                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                // Request camera access with retries
+                let retryCount = 0;
+                const maxRetries = 3;
+                
+                while (retryCount < maxRetries) {
+                    try {
+                        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                        break;
+                    } catch (error) {
+                        retryCount++;
+                        debugLog(`Camera attempt ${retryCount} failed:`, error.message);
+                        
+                        if (retryCount === maxRetries) {
+                            throw error;
+                        }
+                        
+                        // Try with more basic constraints on retry
+                        if (retryCount === 2) {
+                            constraints.video = { facingMode: currentFacingMode };
+                        }
+                        if (retryCount === 3) {
+                            constraints.video = true; // Most basic constraint
+                        }
+                        
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s between retries
+                    }
+                }
+                
                 video.srcObject = videoStream;
                 
                 // Enhanced track info logging
@@ -1035,45 +1107,79 @@
                 const settings = track.getSettings();
                 debugLog('Camera settings', settings);
                 
-                // Wait for video to be ready with timeout
+                // Wait for video to be ready with extended timeout and better error handling
                 await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Video load timeout')), 10000);
+                    const timeout = setTimeout(() => reject(new Error('Video load timeout - try closing other apps using camera')), 15000); // Increased to 15s
                     
-                    video.onloadedmetadata = () => {
-                        clearTimeout(timeout);
-                        video.play().then(() => {
-                            // Enhanced UI feedback
-                            placeholder.style.display = 'none';
-                            video.style.display = 'block';
-                            scannerArea.classList.add('scanning');
-                            
-                            status.textContent = '🎯 Position QR code within the scanner frame';
-                            status.className = 'scanner-status success';
-                            
-                            // Start scanning with enhanced detection
-                            setTimeout(() => {
-                                startEnhancedQRScanning();
-                            }, 1000);
-                            
-                            debugLog('Camera started successfully', {
-                                width: video.videoWidth,
-                                height: video.videoHeight,
-                                facingMode: currentFacingMode
-                            });
-                            
-                            resolve();
-                        }).catch(reject);
+                    const checkVideoReady = () => {
+                        if (video.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+                            clearTimeout(timeout);
+                            video.play().then(() => {
+                                // Enhanced UI feedback
+                                placeholder.style.display = 'none';
+                                video.style.display = 'block';
+                                scannerArea.classList.add('scanning');
+                                
+                                status.textContent = '🎯 Position QR code within the scanner frame';
+                                status.className = 'scanner-status success';
+                                
+                                // Start scanning with enhanced detection
+                                setTimeout(() => {
+                                    startEnhancedQRScanning();
+                                }, 1500);
+                                
+                                debugLog('Camera started successfully', {
+                                    width: video.videoWidth,
+                                    height: video.videoHeight,
+                                    facingMode: currentFacingMode,
+                                    readyState: video.readyState
+                                });
+                                
+                                resolve();
+                            }).catch(reject);
+                        } else {
+                            // Check again in 100ms
+                            setTimeout(checkVideoReady, 100);
+                        }
                     };
+                    
+                    video.onloadedmetadata = checkVideoReady;
+                    video.oncanplay = checkVideoReady;
                     
                     video.onerror = () => {
                         clearTimeout(timeout);
-                        reject(new Error('Video playback failed'));
+                        reject(new Error('Video playback failed - camera may be in use by another app'));
                     };
+                    
+                    // Start checking immediately
+                    checkVideoReady();
                 });
                 
             } catch (error) {
                 debugLog('Camera start failed', error.message);
-                showCameraError(error.message);
+                
+                // Enhanced error messages based on error type
+                let errorMessage = error.message;
+                let helpText = '';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = 'Camera permission denied';
+                    helpText = 'Please allow camera access and refresh the page';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage = 'No camera found';
+                    helpText = 'Make sure your device has a camera';
+                } else if (error.name === 'AbortError') {
+                    errorMessage = 'Camera access aborted';
+                    helpText = 'Please try again or restart your browser';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'Camera initialization timeout';
+                    helpText = 'Close other apps using camera and try again';
+                } else if (error.message.includes('in use')) {
+                    errorMessage = 'Camera is being used by another app';
+                    helpText = 'Close other camera apps and try again';
+                }
+                
+                showEnhancedCameraError(errorMessage, helpText);
                 scannerArea.classList.remove('scanning');
             }
         }
@@ -1105,7 +1211,7 @@
             }
             if (placeholder) {
                 placeholder.style.display = 'block';
-                placeholder.innerHTML = '<div>📷 Click to start camera scanning</div><div style="font-size: 16px; margin-top: 10px;">Massive scanning area for perfect detection</div>';
+                placeholder.innerHTML = '<div>📷 Tap to start camera scanning</div><div style="font-size: 16px; margin-top: 10px;">Massive scanning area • Close other camera apps first</div>';
             }
             if (status) {
                 status.textContent = 'Tap the camera area to start scanning';
@@ -1195,14 +1301,20 @@
                     scanning = false;
                     clearInterval(scanningInterval);
                     
-                    // Enhanced feedback
+                    // Enhanced feedback with success sound simulation
                     const scannerArea = document.getElementById('scannerArea');
                     scannerArea.classList.add('flash');
                     setTimeout(() => scannerArea.classList.remove('flash'), 300);
                     
+                    // Vibration pattern for success
                     if (navigator.vibrate) {
-                        navigator.vibrate([200, 100, 200]);
+                        navigator.vibrate([100, 50, 100, 50, 200]);
                     }
+                    
+                    // Update status immediately
+                    const status = document.getElementById('scannerStatus');
+                    status.textContent = '🎉 QR Code Successfully Detected!';
+                    status.className = 'scanner-status success';
                     
                     // Show immediate detection feedback
                     showQRDetectedResult(code.data);
@@ -1374,7 +1486,7 @@ Backend URL: ${CONFIG.API_BASE_URL}`;
             document.querySelector('.scan-line').style.animation = 'none';
         }
 
-        function showCameraError(errorMessage) {
+        function showEnhancedCameraError(errorMessage, helpText) {
             const resultDiv = document.getElementById('qrResult');
             const resultText = document.getElementById('qrResultText');
             const resultIcon = document.querySelector('#qrResult .result-icon');
@@ -1382,7 +1494,7 @@ Backend URL: ${CONFIG.API_BASE_URL}`;
             const placeholder = document.getElementById('cameraPlaceholder');
             const status = document.getElementById('scannerStatus');
             
-            placeholder.innerHTML = '<div>📷 Camera not available</div><div style="font-size: 16px; margin-top: 10px;">Click to retry</div>';
+            placeholder.innerHTML = '<div>📷 Camera error - Tap to retry</div><div style="font-size: 14px; margin-top: 8px;">Follow the troubleshooting steps below</div>';
             placeholder.style.display = 'block';
             status.textContent = '📷 Camera access failed - Try again';
             status.className = 'scanner-status error';
@@ -1390,21 +1502,45 @@ Backend URL: ${CONFIG.API_BASE_URL}`;
             resultIcon.textContent = '⚠️';
             resultIcon.style.background = '#e74c3c';
             resultTitle.textContent = 'Camera Error';
+            
+            const isSecure = location.protocol === 'https:';
+            const browserInfo = navigator.userAgent.includes('Chrome') ? 'Chrome' : 
+                               navigator.userAgent.includes('Firefox') ? 'Firefox' : 
+                               navigator.userAgent.includes('Safari') ? 'Safari' : 'Unknown';
+            
             resultText.textContent = `📷 CAMERA ACCESS FAILED
 
 ❌ Error: ${errorMessage}
+💡 Help: ${helpText}
 
-💡 Tips to fix:
-1. Allow camera permissions when prompted
-2. Refresh the page and try again  
-3. Check if another app is using the camera
-4. Try using HTTPS instead of HTTP
-5. Try a different browser (Chrome recommended)
+🔧 TROUBLESHOOTING STEPS:
 
-🔧 Technical Details:
-- Browser: ${navigator.userAgent.split(' ')[0]}
-- HTTPS: ${location.protocol === 'https:' ? 'Yes' : 'No'}
-- Platform: ${navigator.platform}`;
+1️⃣ CLOSE OTHER APPS
+   • Close all camera apps (Instagram, Snapchat, etc.)
+   • Close other browser tabs using camera
+   • Restart your browser
+
+2️⃣ CHECK PERMISSIONS
+   • Tap the 🔒 lock icon in address bar
+   • Set Camera to "Allow"
+   • Refresh this page
+
+3️⃣ BROWSER ISSUES
+   • Try Chrome browser (recommended)
+   • Clear browser cache
+   • Restart your phone
+
+4️⃣ DEVICE ISSUES
+   • Make sure camera isn't physically blocked
+   • Try switching between front/back camera
+   • Restart your device
+
+🌐 TECHNICAL INFO:
+   • HTTPS: ${isSecure ? '✅ Yes' : '❌ No (Required!)'}
+   • Browser: ${browserInfo}
+   • Device: ${navigator.platform}
+
+${!isSecure ? '⚠️ HTTPS is required for camera access on this domain!' : ''}`;
             
             resultDiv.style.display = 'block';
             resultDiv.style.borderLeftColor = '#e74c3c';
